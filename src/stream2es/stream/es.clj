@@ -7,8 +7,7 @@
 (declare make-callback)
 
 (def match-all
-  (json/generate-string
-    {"query" {"match_all" {}}}))
+  {"query" {"match_all" {}}})
 
 (def bulk-bytes
   (* 1024 1024 1))
@@ -28,7 +27,9 @@
       :parse-fn #(Integer/parseInt %)]
      ["--source" "Source ES url"]
      ["--target" "Target ES url"]
-     ["--query" "Query to _scan from source" :default match-all]
+     ["--query" "Query to _scan from source"
+      :default match-all
+      :parse-fn json/parse-string]
      ["--scroll-size" "Source scroll size"
       :default 500
       :parse-fn #(Integer/parseInt %)]
@@ -58,10 +59,14 @@
           {:_id (:_id hit)
            :_type (:_type hit)})))
 
+(defn get-query [opts]
+  (:query opts))
+
 (defn make-callback [opts handler]
   (fn []
     (doseq [hit (es/scan (:source opts)
-                         (:query opts)
+                         (json/generate-string
+                           (get-query opts))
                          (:scroll-time opts)
                          (:scroll-size opts))]
       (-> hit make-doc handler))
