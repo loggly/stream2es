@@ -395,6 +395,7 @@
                         :mapping mapping})))))
 
 (defn main [world]
+  (println world)
   (let [state (start! world)]
     (try
       (when (:indexing @state)
