@@ -193,12 +193,10 @@
           (when (:indexing @state)
             (let [idxbulk (make-indexable-bulk bulk)
                   idxbulkbytes (count (.getBytes idxbulk))
-                  bulk-bytes (reduce + (map #(get-in % [:source :bytes]) bulk))
                   url (format "%s/%s" (:target @state) "_bulk")
                   errors (es/error-capturing-bulk url bulk make-indexable-bulk)]
               (dosync
                (alter state update-in [:total :indexed :docs] + (count bulk))
-               (alter state update-in [:total :indexed :bytes] + bulk-bytes)
                (alter state update-in [:total :indexed :wire-bytes]
                       + idxbulkbytes)
                (alter state update-in [:total :errors] (fnil + 0) errors))
