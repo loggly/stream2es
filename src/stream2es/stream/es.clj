@@ -12,13 +12,11 @@
 (def bulk-bytes
   (* 1024 1024 1))
 
-(defrecord Document [m])
 
-(defrecord ElasticsearchStream [])
 
 (defrecord ElasticsearchStreamRunner [runner])
 
-(extend-type ElasticsearchStream
+(defrecord ElasticsearchStream []
   CommandLine
   (specs [this]
     [["-b" "--bulk-bytes" "Bulk size in bytes"
@@ -45,7 +43,7 @@
       {type {:properties {}}}
       (es/mapping (:source opts)))))
 
-(extend-type Document
+(defrecord Document [m]
   Streamable
   (make-source [doc opts]
     (:m doc)))
