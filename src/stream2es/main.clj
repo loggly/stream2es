@@ -92,7 +92,7 @@
       :_type (:_type source _type)}
      (when (:_id source)
        {:_id (str (:_id source))}))}
-   (merge source
+   (merge (dissoc source :_type)
           (when tag-progress
             {:bytes (-> source json/encode .getBytes count)
              :offset offset}))))
