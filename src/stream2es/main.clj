@@ -101,10 +101,6 @@
   (let [itemct (count (:items @state))
         items (:items @state)]
     (when (pos? itemct)
-      #_(log/info
-         (format ">--> %d items; %d bytes; first-id %s"
-                 itemct (:bytes @state)
-                 (-> items first :meta :index :_id)))
       ((:indexer @state) items)
       (dosync
        (alter state assoc :bytes 0)

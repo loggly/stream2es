@@ -69,7 +69,7 @@
         hits (-> resp :hits :hits)
         new-id (:_scroll_id resp)]
     (when (seq hits)
-      (lazy-cat hits (scroll url new-id ttl)))))
+      (concat hits (lazy-seq (scroll url new-id ttl))))))
 
 (defn scan1
   "Set up scroll context."
