@@ -7,7 +7,8 @@
 (declare make-callback)
 
 (def match-all
-  "{\"query\":{\"match_all\":{}}}")
+  (json/generate-string
+    {"query" {"match_all" {}}}))
 
 (def bulk-bytes
   (* 1024 1024 1))
