@@ -410,6 +410,11 @@
         (.printStackTrace e)
         (quit "stream error: %s" (str e))))))
 
+(defn es-main [optmap]
+  (main (assoc optmap
+          :stream (stream/new 'es)
+          :cmd    'es)))
+
 (defn -main [& args]
   (try+
    (let [[cmd stream] (get-stream args)
