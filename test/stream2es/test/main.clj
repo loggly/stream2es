@@ -1,8 +1,7 @@
 (ns stream2es.test.main
   (:require [cheshire.core :as json]
             [clojure.test :refer :all]
-            [stream2es.es]
-            [stream2es.stream.twitter])
+            [stream2es.es])
   (:require [stream2es.main] :reload))
 
 #_(deftest help

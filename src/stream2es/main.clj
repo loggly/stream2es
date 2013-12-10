@@ -1,11 +1,7 @@
 (ns stream2es.main
   (:gen-class)
   ;; Need to require these because of the multimethod in s.stream.
-  (:require [stream2es.stream.wiki]
-            [stream2es.stream.stdin]
-            [stream2es.stream.twitter :as twitter]
-            [stream2es.stream.queue]
-            [stream2es.stream.es])
+  (:require [stream2es.stream.es])
   (:require [cheshire.core :as json]
             [clojure.tools.cli :refer [cli]]
             [stream2es.auth :as auth]
@@ -338,7 +334,7 @@
     (println)
     (println "Usage: stream2es [CMD] [OPTS]")
     (println)
-    (println "Available commands: wiki, twitter, stdin, queue, es")
+    (println "Available commands: es")
     (println)
     (println "Common opts:")
     (print (help/help opts))))
@@ -368,7 +364,7 @@
                 (when (.startsWith tok "-")
                   (throw+ {:type ::badarg} ""))
                 (symbol tok))
-              'stdin)]
+              'es)]
     (try
       [cmd (stream/new cmd)]
       (catch IllegalArgumentException _
@@ -412,8 +408,7 @@
 
 (defn es-main [optmap]
   (main (assoc optmap
-          :stream (stream/new 'es)
-          :cmd    'es)))
+          :stream (stream/new 'es))))
 
 (defn -main [& args]
   (try+
@@ -422,9 +417,6 @@
          [optmap args _] (parse-opts args main-plus-cmd-specs)]
      (when (:help optmap)
        (quit (help stream)))
-     (when (and (= cmd 'twitter) (:authorize optmap))
-       (auth/store-creds (:authinfo optmap) (twitter/make-creds optmap))
-       (quit "*** Success! Credentials saved to %s" (:authinfo optmap)))
      (if (:version optmap)
        (quit (version))
        (main (assoc optmap :stream stream :cmd cmd))))
