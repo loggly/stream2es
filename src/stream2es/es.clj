@@ -98,3 +98,13 @@
     (if index
       (resp (keyword index))
       resp)))
+
+(defn settings [url]
+  (let [resp (-> (format "%s/_settings" url)
+                 http/get
+                 :body
+                 (json/parse-string true))
+        index (:index (components url))]
+    (if index
+      (get-in resp [(keyword index) :settings])
+      resp)))
