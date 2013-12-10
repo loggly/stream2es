@@ -5,7 +5,7 @@
             [stream2es.stream.twitter])
   (:require [stream2es.main] :reload))
 
-(deftest help
+#_(deftest help
   (with-redefs [stream2es.main/quit (fn [& args] (first args))
                 stream2es.main/main (fn [_])]
     (testing "no args"
@@ -17,7 +17,7 @@
     (testing "badcmd"
       (is (.contains (stream2es.main/-main "foo") "foo is not a")))))
 
-(deftest index-settings
+#_(deftest index-settings
   (let [ops (atom [])
         stream (stream2es.stream.twitter.TwitterStream.)
         settings (json/encode stream2es.main/index-settings)]
