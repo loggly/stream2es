@@ -108,3 +108,18 @@
     (if index
       (get-in resp [(keyword index) :settings])
       resp)))
+
+(defn filter-keys [m pred]
+  (into {}
+    (filter
+      (comp pred first)
+      m)))
+
+(defn keep-key [cids]
+  (let [cids (set cids)]
+    (fn [k]
+      (try (cids (Integer/parseInt (name k)))
+        (catch NumberFormatException _ true)))))
+
+(defn filter-mapping [mapping cids]
+  (update-in mapping [:log :properties] filter-keys (keep-key cids)))
