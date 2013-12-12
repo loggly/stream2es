@@ -4,7 +4,6 @@
   (:require [stream2es.stream.es])
   (:require [cheshire.core :as json]
             [clojure.tools.cli :refer [cli]]
-            [stream2es.auth :as auth]
             [stream2es.log :as log]
             [stream2es.es :as es]
             [stream2es.size :refer [size-of]]
