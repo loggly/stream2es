@@ -15,7 +15,7 @@
 
 (defn get-splitter-policy [opts]
   ; XXX
-  (fn [cust-id]
+  (fn [item]
     3))
 
 (defn do-until-stop [source action]
@@ -98,10 +98,6 @@
   ; XXX
   ["foo" "bar" "baz"])
 
-(defn get-cust [item] 
-  ; XXX
-  5)
-
 (defn start-splitter [policy indexers continue? finish]
   (let [q (LinkedBlockingQueue.)
         flush-indexers (fn [] (doseq [indexer indexers]
@@ -119,8 +115,7 @@
                            (do
                              (flush-indexers)
                              (finish ind-name))))
-            (let [cust (get-cust item)
-                  indexer-id (policy cust)
+            (let [indexer-id (policy item)
                   indexer (nth indexers indexer-id)]
               (indexer item)
               (recur))))))
