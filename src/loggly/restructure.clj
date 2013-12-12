@@ -161,7 +161,7 @@
         continue-flag      (atom true)
         index-fn-fact      (fn [iname]
                              (let [url (make-url target-host iname)]
-                               (fn [bulk (do-index url bulk)])))
+                               (fn [bulk] (do-index url bulk))))
         indexers           (start-indexers
                              target-index-names
                              #(.countDown indexer-done-latch)
