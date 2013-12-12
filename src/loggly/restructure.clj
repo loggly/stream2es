@@ -81,9 +81,7 @@
                        index-limit)
                 (signal-stop))
               (recur))))))
-    (fn [item] (.put q item)))
-
-  )
+    (fn [item] (.put q item))))
 
 (defn start-indexers [index-names finish signal-stop index-fn-fact opts]
   (for [iname index-names]
