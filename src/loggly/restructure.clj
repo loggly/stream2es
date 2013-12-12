@@ -87,9 +87,10 @@
   (for [iname index-names]
     (start-indexer
       signal-stop
-      (start-index-worker-pool ;XXX
-        finish
-        (index-fn-fact iname))
+      (start-index-worker-pool
+        (assoc opts
+          :done-notifier finish
+          :do-index (index-fn-fact iname)))
       opts)))
 
 (defn get-target-index-names [opts]
