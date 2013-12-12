@@ -2,6 +2,8 @@
   (:use [clojure test]
         [loggly restructure]))
 
+(defn sleep [] (Thread/sleep 10))
+
 (deftest pool-test
   (let [done (atom false)
         collector (atom #{})
@@ -14,12 +16,12 @@
     (dotimes [i 20]
       (pool i))
 
-    (Thread/sleep 200)
+    (sleep)
     (is (= @collector (set (range 20))))  
     (is (not @done))
 
     (pool :stop)
-    (Thread/sleep 200)
+    (sleep)
     (is @done)
     ))
 
@@ -33,15 +35,15 @@
                    :index-limit 5})]
     (dotimes [i 5]
       (indexer i))
-    (Thread/sleep 200)
+    (sleep)
     (is (not @stop-signalled))
     (doseq [i (range 5 10)]
       (indexer i))
-    (Thread/sleep 200)
+    (sleep)
     (is @stop-signalled)
 
     (indexer :stop)
-    (Thread/sleep 200)
+    (sleep)
     (is (= @collector
            [[0 1 2]
             [3 4 5]
