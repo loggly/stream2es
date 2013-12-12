@@ -74,7 +74,7 @@
               (bulk-sink :stop))
             (do
               (swap! building-batch conj item)
-              (when (> (swap! batch-doc-count inc)
+              (when (= (swap! batch-doc-count inc)
                        batch-size)
                 (do-flush))
               (when (> (swap! total-doc-count inc)
