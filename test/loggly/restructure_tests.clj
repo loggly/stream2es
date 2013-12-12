@@ -49,8 +49,64 @@
             [3 4 5]
             [6 7 8]
             [9]
-            :stop]))
+            :stop]))))
 
+(defn setup-splitter [continue-fn]
+  (let [last-index (atom nil)
+        policy {:foo 0 :bar 1 :baz 2}
+        collector (atom {})
+        finished (atom false)
+        indexers (for [i (range 3)]
+                   (fn [x]
+                     (swap! collector update-in [i] (fnil conj []) x)))
+        splitter (start-splitter
+                   policy
+                   indexers
+                   continue-fn
+                   (fn [ind]
+                     (reset! finished true)
+                     (reset! last-index ind)))]
+    {:last-index last-index
+     :collector collector
+     :finished finished
+     :splitter splitter}
     ))
+
+(deftest splitter-test
+  (let [{:keys [last-index
+                collector
+                finished
+                splitter]} (setup-splitter (constantly true))]
+    (splitter :foo)
+    (splitter :bar)
+    (sleep)
+    (is (= @collector
+           {0 [:foo] 1 [:bar]}))
+    (is (not @finished))
+    (splitter :new-index)
+    (splitter "hello world")
+    (splitter :baz)
+    (splitter :stop)
+    (sleep)
+    (is @finished)
+    (is (= @collector {0 [:foo :stop] 1 [:bar :stop] 2 [:baz :stop]}))
+    (is (= @last-index :all))
+    ))
+
+(deftest splitter-check-stop-on-index
+  (let [{:keys [last-index
+                collector
+                finished
+                splitter]} (setup-splitter (constantly false))]
+    (splitter :foo)
+    (splitter :bar)
+    (splitter :new-index)
+    (splitter "hello world")
+    (splitter :baz)
+    (sleep)
+    (is @finished)
+    (is (= @collector {0 [:foo :stop] 1 [:bar :stop] 2 [:stop]}))
+    (is (= @last-index "hello world"))))
+
 
 (comment (run-tests))
