@@ -69,7 +69,9 @@
       (loop []
         (let [item (.take q)]
           (if (= item :stop)
-            (do-flush)
+            (do
+              (do-flush)
+              (bulk-sink :stop))
             (do
               (swap! building-batch conj item)
               (when (> (swap! batch-doc-count inc)
