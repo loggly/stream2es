@@ -18,9 +18,42 @@
   (fn [cust-id]
     3))
 
-(defn start-index-worker-pool [& opts]
-  ;XXX
-  )
+(defn do-until-stop [source action]
+  (loop []
+    (let [x (source)]
+      (when-not (= :stop x)
+        (action x)
+        (recur)))))
+
+(defn start-index-worker-pool
+  "takes a number of workers, a number of bulks to queue, a function
+   to call on completion, and a function to index a single bulk.
+   Returns a function that can be called with a
+   list of documents or with :stop to signal done
+
+   stolen with modifications from stream2es main"
+  [{:keys [workers queue-size done-notifier do-index]}]
+  (let [q (LinkedBlockingQueue. queue-size)
+        latch (CountDownLatch. workers)
+        disp (fn []
+               (do-until-stop #(.take q) do-index)
+               (log/debug "waiting for POSTs to finish")
+               (.countDown latch))
+        lifecycle (fn []
+                    (.await latch)
+                    (log/debug "done indexing")
+                    (done-notifier))]
+    ;; start index pool
+    (dotimes [n workers]
+      (.start (Thread. disp (str "indexer " (inc n)))))
+    ;; notify when done
+    (.start (Thread. lifecycle "index service"))
+    ;; This becomes :indexer above!
+    (fn [bulk]
+      (if (= bulk :stop)
+        (dotimes [n workers]
+          (.put q :stop))
+        (.put q bulk)))))
 
 (defn start-indexer [signal-stop bulk-sink
                      {:keys [batch-size index-limit] :as opts}]
