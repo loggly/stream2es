@@ -41,14 +41,11 @@
   (settings [_]
     {:index.refresh_interval "5s"})
   (mapping [_ opts]
-    (if type
-      {type {:properties {}}}
-      (es/mapping (:source opts)))))
+    (es/mapping (:source opts))))
 
 (defrecord Document [m]
   Streamable
-  (make-source [doc opts]
-    (:m doc)))
+  (make-source [doc opts] m))
 
 (defmethod new 'es [cmd]
   (ElasticsearchStream.))

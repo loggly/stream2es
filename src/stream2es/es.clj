@@ -93,7 +93,7 @@
   (let [resp (-> (format "%s/_mapping" url)
                  http/get
                  :body
-                 (json/decode true))
+                 (json/parse-string true))
         index (:index (components url))]
     (if index
       (resp (keyword index))
@@ -123,3 +123,11 @@
 
 (defn filter-mapping [mapping cids]
   (update-in mapping [:log :properties] filter-keys (keep-key cids)))
+
+(filter-mapping {:other-top 'stuff
+                 :log
+                 {:other 'stuff
+                  :properties
+                  {:foo "bar" :1 "baz" :4 "qux"}}} [3 4 5])
+
+(set! *warn-on-reflection* true)

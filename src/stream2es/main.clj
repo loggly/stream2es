@@ -144,17 +144,18 @@
               "\n"))
        (apply str)))
 
+(defn replace-id [item]
+  (merge (:source item)
+         {:_id (-> item :meta :index :_id)}
+         (when (-> item :meta :index :_type)
+           {:_type (-> item :meta :index :_type)})))
+
 (defn make-json-string [items]
-  (let [replace-id (fn [item]
-                     (merge (:source item)
-                            {:_id (-> item :meta :index :_id)}
-                            (when (-> item :meta :index :_type)
-                              {:_type (-> item :meta :index :_type)})))]
-    (->> items
-         (map replace-id)
-         (map json/encode)
-         (interpose "\n")
-         (apply str))))
+  (->> items
+       (map replace-id)
+       (map json/encode)
+       (interpose "\n")
+       (apply str)))
 
 (defn index-status [id bulk-count bulk-bytes state]
   (let [upmillis (- (System/currentTimeMillis) (:started-at @state))
@@ -386,6 +387,9 @@
                        {:settings settings
                         :mapping mapping})))))
 
+(defn es-url [index]
+  (str "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/" index))
+
 (defn main [world]
   (println world)
   (let [state (start! world)]
@@ -420,8 +424,6 @@
      (if (:version optmap)
        (quit (version))
        (main (assoc optmap :stream stream :cmd cmd))))
-   (catch [:type :stream2es.auth/nocreds] _
-     (quit (format "Error: %s" (:message &throw-context))))
    (catch [:type ::badcmd] _
      (quit (format "Error: %s\n\n%s" (:message &throw-context) (help))))
    (catch [:type ::badarg] _
