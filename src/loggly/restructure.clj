@@ -136,7 +136,11 @@
   ; XXX
   )
 
-(defn do-index [target-url bulk]
+(defn do-index
+  "sends a list of documents to an url
+
+   stolen with modifications from stream2es"
+  [target-url bulk]
   (when (and (sequential? bulk) (pos? (count bulk)))
     (let [first-id (-> bulk first :meta :index :_id)
           idxbulk (main/make-indexable-bulk bulk)
