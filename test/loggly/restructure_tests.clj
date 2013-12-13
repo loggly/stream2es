@@ -115,5 +115,5 @@
 
 
 (comment
-  (run-tests))
 
+(run-tests))
