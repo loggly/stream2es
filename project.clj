@@ -10,9 +10,6 @@
                  [org.clojure/tools.cli "0.2.2"]
                  [slingshot "0.10.3"]
                  [org.tukaani/xz "1.3"]
+                 [log4j "1.2.17"]
                  [criterium "0.4.2"]]
-  :plugins [[lein-bin "0.3.2"]]
-  :aot [stream2es.main]
-  :main stream2es.main
-  :jvm-opts ^replace []
-  :bin {:bootclasspath true})
+  )

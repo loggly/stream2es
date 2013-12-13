@@ -1,6 +1,8 @@
 (ns loggly.restructure.util
-  (:require [stream2es.log :as log])
+  (:require [loggly.restructure.log :refer :all])
   (:import [java.util.concurrent LinkedBlockingQueue]))
+
+(deflogger logger)
 
 (defn make-url [hostname index-name]
   (format "http://%s:9200/%s" hostname index-name))
@@ -25,6 +27,13 @@
 (defn in-thread* [thread-name f daemon]
   (let [t (Thread. f thread-name)]
     (.setDaemon t daemon)
+    (.setUncaughtExceptionHandler t
+      (reify Thread$UncaughtExceptionHandler
+        (uncaughtException [_ t e]
+          (fatal
+            logger
+            (str "thread " t " died unexpectedly")
+            e))))
     (register-refresh #(.stop t))
     (.start t)
     nil))
@@ -46,9 +55,9 @@
         (Thread/sleep 5000)
         (let [cap (.remainingCapacity q)]
           (when (= cap 0)
-            (log/debug (str "queue " q-name " is full")))
+            (debug logger (str "queue " q-name " is full")))
           (when (= cap capacity)
-            (log/debug (str "queue " q-name " is empty")))
+            (debug logger (str "queue " q-name " is empty")))
           (recur)
           )))
     q))
