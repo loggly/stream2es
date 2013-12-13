@@ -6,14 +6,21 @@
   (format "http://%s:9200/%s" hostname index-name))
 
 (def refreshes (atom []))
+(def perm-refreshes (atom []))
 
 (defn refresh! []
   (doseq [f @refreshes]
     (f))
-  (reset! refreshes []))
+  (doseq [f @perm-refreshes]
+    (f))
+  (reset! refreshes [])
+  nil)
 
 (defn register-refresh [f]
   (swap! refreshes conj f))
+
+(defn register-perm-refresh [f]
+  (swap! perm-refreshes conj f))
 
 (defn in-thread* [thread-name f daemon]
   (let [t (Thread. f thread-name)]
