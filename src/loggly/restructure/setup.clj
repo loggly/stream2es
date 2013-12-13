@@ -21,7 +21,7 @@
         new-settings (merge source-settings overrides)
         creation-json (json/generate-string
                         {:settings new-settings
-                         :mapping  routing-mapping})]
+                         :mappings routing-mapping})]
     (doseq [iname target-names]
       (let [target-url (make-url target-host iname)]
         (when (es/exists? target-url)
