@@ -1,7 +1,7 @@
 (ns loggly.restructure.splitter
-  (:require [loggly.restructure.util :refer [in-thread
-                                             resetting-atom]])
-  (:import [java.util.concurrent LinkedBlockingQueue]))
+  (:require [loggly.restructure.util :refer [resetting-atom
+                                             in-thread
+                                             get-queue]]))
 
 (defn make-doc
   "taken from stream2es. Ask Drew."
@@ -29,11 +29,11 @@
 (deref items-sent)
 (deref items-received)
 
-(defn start-splitter [policy indexers continue?
-                      finish & [transformer]]
+(defn start-splitter [policy indexers continue? finish
+                      {:keys [transformer splitter-docs-queued]}]
   (let [transformer (or transformer
                         #(-> % make-doc source2item))
-        q (LinkedBlockingQueue. 10) ;XXX
+        q (get-queue splitter-docs-queued "splitter queue")
         ; pack in a vector for quick lookups
         indexers (into [] indexers)
         flush-indexers (fn [] (doseq [indexer indexers]

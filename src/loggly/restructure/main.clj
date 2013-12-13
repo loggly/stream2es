@@ -65,6 +65,9 @@
      :index-tag "hot"
      :scroll-time "5m"
      :scroll-size 500
+     :splitter-docs-queued
+     :indexer-docs-queued
+     :bulks-queued
      :source-index-names ["000101.0000.shared.e4db46"
                           "131210.2338.shared.8ad3e8"
                           "131211.0450.shared.9dd071"]
@@ -89,7 +92,8 @@
                              splitter-policy
                              indexers
                              (fn [] @continue-flag)
-                             done-reporter)]
+                             done-reporter
+                             opts)]
     (create-target-indexes
       source-index-names
       target-index-names

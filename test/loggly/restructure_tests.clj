@@ -9,9 +9,10 @@
         collector (atom #{})
         pool (start-index-worker-pool
                {:workers-per-index 3
-                :queue-size 20
+                :bulks-queued 20
                 :done-notifier #(reset! done true)
-                :do-index #(swap! collector conj %)})]
+                :do-index #(swap! collector conj %)
+                :pool-name "test-pool"})]
 
     (dotimes [i 20]
       (pool i))
@@ -31,7 +32,9 @@
         indexer (start-indexer
                   #(reset! stop-signalled true)
                   #(swap! collector conj %)
+                  "indexer"
                   {:batch-size 3
+                   :indexer-docs-queued 20
                    :index-limit 5})]
     (dotimes [i 5]
       (indexer i))
@@ -66,7 +69,8 @@
                    (fn [ind]
                      (reset! finished true)
                      (reset! last-index ind))
-                   identity)]
+                   {:splitter-docs-queued 50
+                    :transformer identity})]
     {:last-index last-index
      :collector collector
      :finished finished

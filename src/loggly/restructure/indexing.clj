@@ -2,10 +2,9 @@
   (:require [stream2es.main :refer [make-indexable-bulk]]
             [stream2es.es :as es]
             [stream2es.log :as log]
-            [loggly.restructure.util :refer [in-thread make-url]])
-  (:import [java.util.concurrent CountDownLatch
-                                 LinkedBlockingQueue]) 
-  )
+            [loggly.restructure.util :refer [in-thread make-url
+                                             resetting-atom get-queue]])
+  (:import [java.util.concurrent CountDownLatch]))
 
 (defn do-until-stop [source action]
   (loop []
@@ -21,22 +20,21 @@
    list of documents or with :stop to signal done
 
    stolen with modifications from stream2es main"
-  [{:keys [workers-per-index done-notifier do-index]}]
-  (let [q (LinkedBlockingQueue.) ; XXX
-        latch (CountDownLatch. workers-per-index)
-        disp (fn []
-               (do-until-stop #(.take q) do-index)
-               (log/debug "waiting for POSTs to finish")
-               (.countDown latch))
-        lifecycle (fn []
-                    (.await latch)
-                    (log/debug "done indexing")
-                    (done-notifier))]
+  [{:keys [workers-per-index done-notifier
+           do-index bulks-queued pool-name]}]
+  (let [q (get-queue bulks-queued pool-name)
+        latch (CountDownLatch. workers-per-index)]
     ;; start index pool
     (dotimes [n workers-per-index]
-      (.start (Thread. disp (str "indexer " (inc n)))))
+      (in-thread (str pool-name "-" (inc n))
+        (do-until-stop #(.take q) do-index)
+        (log/debug "waiting for POSTs to finish")
+        (.countDown latch)))
     ;; notify when done
-    (.start (Thread. lifecycle "index service"))
+    (in-thread (str pool-name "-monitor")
+      (.await latch)
+      (log/debug "done indexing")
+      (done-notifier))
     ;; This becomes :indexer above!
     (fn [bulk]
       (if (= bulk :stop)
@@ -44,9 +42,10 @@
           (.put q :stop))
         (.put q bulk)))))
 
-(defn start-indexer [signal-stop bulk-sink
-                     {:keys [batch-size index-limit] :as opts}]
-  (let [q (LinkedBlockingQueue.) ;XXX
+(defn start-indexer [signal-stop bulk-sink process-name
+                     {:keys [batch-size index-limit
+                             indexer-docs-queued] :as opts}]
+  (let [q (get-queue indexer-docs-queued process-name)
         building-batch (atom [])
         batch-doc-count (atom 0)
         total-doc-count (atom 0)
@@ -54,7 +53,7 @@
                    (bulk-sink @building-batch)
                    (reset! batch-doc-count 0)
                    (reset! building-batch []))]
-    (in-thread "indexer-thread-N" ;XXX
+    (in-thread process-name
       (loop []
         (let [item (.take q)]
           (if (= item :stop)
@@ -88,12 +87,14 @@
 (defn start-indexers [index-names finish signal-stop
                       {:keys [target-host] :as opts}]
   (let [index-fn-fact (:index-fn-fact opts
-                        default-index-fn-fact)]
+                       default-index-fn-fact)]
     (for [iname index-names]
       (start-indexer
         signal-stop
         (start-index-worker-pool
-          (assoc opts
-            :done-notifier finish
-            :do-index (index-fn-fact iname target-host)))
+          (merge opts
+            {:done-notifier finish
+             :do-index (index-fn-fact iname target-host)
+             :pool-name (str "pool-" iname)} ))
+        (str "indexer-" iname)
         opts))))
