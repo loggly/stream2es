@@ -111,7 +111,5 @@
 
 
 (comment
-  (run-tests)
-  (require ['criterium.core :as 'profile])
-  (let [l (into [] (range 12))] (profile/quick-bench (nth l 10))))
+  (run-tests))
 
