@@ -65,7 +65,8 @@
                    continue-fn
                    (fn [ind]
                      (reset! finished true)
-                     (reset! last-index ind)))]
+                     (reset! last-index ind))
+                   identity)]
     {:last-index last-index
      :collector collector
      :finished finished
@@ -109,4 +110,8 @@
     (is (= @last-index "hello world"))))
 
 
-(comment (run-tests))
+(comment
+  (run-tests)
+  (require ['criterium.core :as 'profile])
+  (let [l (into [] (range 12))] (profile/quick-bench (nth l 10))))
+

@@ -1,11 +1,11 @@
 (ns loggly.restructure
   (:require [stream2es.main :as main]
             [stream2es.es :as es]
-            [stream2es.log :as log])
-  (:import [clojure.lang ExceptionInfo]
-           [java.util.concurrent CountDownLatch
-                                 LinkedBlockingQueue
-                                 TimeUnit]))
+            [stream2es.log :as log]
+            [cheshire.core :as json]
+            [clojure.data :as data])
+  (:import [java.util.concurrent CountDownLatch
+                                 LinkedBlockingQueue]))
 
 (defmacro in-thread [thread-name & forms]
   `(.start
@@ -25,6 +25,21 @@
         (action x)
         (recur)))))
 
+(defmacro if-first [[x xs] if-case else-case]
+  `(if-let [xs# (seq ~xs)]
+     (let [~x (first xs#)]
+       ~if-case)
+     ~else-case))
+
+(defn compare-by [ks x y]
+  (loop [ks ks]
+    (if-first [k ks]
+      (let [ret (compare (k x) (k y))]
+        (if (= ret 0)
+          (recur (rest ks))
+          ret))
+      0)))
+
 (defn start-index-worker-pool
   "takes a number of workers, a number of bulks to queue, a function
    to call on completion, and a function to index a single bulk.
@@ -32,9 +47,9 @@
    list of documents or with :stop to signal done
 
    stolen with modifications from stream2es main"
-  [{:keys [workers queue-size done-notifier do-index]}]
-  (let [q (LinkedBlockingQueue. queue-size)
-        latch (CountDownLatch. workers)
+  [{:keys [workers-per-index done-notifier do-index]}]
+  (let [q (LinkedBlockingQueue. 5) ; XXX
+        latch (CountDownLatch. workers-per-index)
         disp (fn []
                (do-until-stop #(.take q) do-index)
                (log/debug "waiting for POSTs to finish")
@@ -44,14 +59,14 @@
                     (log/debug "done indexing")
                     (done-notifier))]
     ;; start index pool
-    (dotimes [n workers]
+    (dotimes [n workers-per-index]
       (.start (Thread. disp (str "indexer " (inc n)))))
     ;; notify when done
     (.start (Thread. lifecycle "index service"))
     ;; This becomes :indexer above!
     (fn [bulk]
       (if (= bulk :stop)
-        (dotimes [n workers]
+        (dotimes [n workers-per-index]
           (.put q :stop))
         (.put q bulk)))))
 
@@ -83,7 +98,28 @@
               (recur))))))
     (fn [item] (.put q item))))
 
-(defn start-indexers [index-names finish signal-stop index-fn-fact opts]
+(defn make-doc
+  "taken from stream2es. Ask Drew."
+  [hit]
+  (merge (:_source hit)
+         {:_id (:_id hit)
+          :_type (:_type hit)})  
+  )
+
+(defrecord BulkItem [meta source])
+(defn source2item [source]
+  "taken from stream2es. Ask Drew."
+  (BulkItem.
+   {:index
+    (merge
+     {:_index nil
+      :_type (:_type source)}
+     (when (:_id source)
+       {:_id (str (:_id source))}))}
+   source))
+
+(defn start-indexers [index-names finish signal-stop
+                      index-fn-fact opts]
   (for [iname index-names]
     (start-indexer
       signal-stop
@@ -97,8 +133,11 @@
   ; XXX
   ["foo" "bar" "baz"])
 
-(defn start-splitter [policy indexers continue? finish]
-  (let [q (LinkedBlockingQueue.)
+(defn start-splitter [policy indexers continue?
+                      finish transformer]
+  (let [q (LinkedBlockingQueue. 10) ;XXX
+        ; pack in a vector for quick lookups
+        indexers (into [] indexers)
         flush-indexers (fn [] (doseq [indexer indexers]
                                 (indexer :stop)))]
     (in-thread "splitter-thread"
@@ -116,13 +155,41 @@
                              (finish ind-name))))
             (let [indexer-id (policy item)
                   indexer (nth indexers indexer-id)]
-              (indexer item)
+              (indexer (transformer item))
               (recur))))))
     (fn [item] (.put q item))))
 
-(defn create-target-indexes [names opts]
-  ; XXX
-  )
+(defn make-url [hostname index-name]
+  (format "http://%s:9200/%s" hostname index-name))
+
+; I think this should work?
+(def routing-mapping
+  {:order
+    {:_routing
+      {:required true
+       :path "_custid"}}})
+
+(defn create-target-indexes [[source-name] target-names
+                             {:keys [source-host target-host
+                                     num-shards index-tag]}]
+  (let [source-url (make-url source-host source-name)
+        source-settings (es/settings source-url)
+        overrides {:index.routing.allocation.include.tag index-tag
+                   :index.number_of_shards num-shards}
+        new-settings (merge source-settings overrides)
+        creation-json (json/generate-string
+                        {:settings new-settings
+                         :mapping  routing-mapping})]
+    (doseq [iname target-names]
+      (let [target-url (make-url target-host iname)]
+        (when (es/exists? target-url)
+          (throw (Exception. (str "target index " iname
+                                  " already exists =/"))))
+        (es/post target-url creation-json)
+        (let [result-settings (es/settings target-url)]
+          (when-not (= result-settings new-settings)
+            (println "settings are different -- maybe that's ok? "
+                     (data/diff new-settings result-settings))))))))
 
 (defmacro in-daemon [thread-name & forms]
   `(doto (Thread. 
@@ -131,10 +198,6 @@
      (.setDaemon true)
      .start
      ))
-
-(defn get-item-stream [host index-names]
-  ; XXX
-  )
 
 (defn do-index
   "sends a list of documents to an url
@@ -148,11 +211,40 @@
           url (format "%s/%s" target-url "_bulk") ]
       (es/error-capturing-bulk url bulk main/make-indexable-bulk))))
 
-(defn make-url [hostname index-name]
-  (format "http://%s:9200/%s" hostname index-name))
+(def match-all
+  (json/generate-string
+    {"query"
+      {"match_all" {}}}))
 
+(defn run-stream [host index-names sink
+                  {:keys [scroll-time scroll-size]}]
+  (doseq [iname index-names]
+    (doseq [hit (es/scan
+                  (make-url host iname)
+                  match-all
+                  scroll-time
+                  scroll-size)]
+      (sink hit))
+    (sink :index)
+    (sink :iname))
+  (sink :stop))
+
+
+(comment opts
+         workers-per-index
+         batch-size
+         index-limit
+         source-host
+         target-host
+         num-shards
+         index-tag
+         scroll-time
+         scroll-size
+         source-index-names
+         target-count
+         )
 (defn main [{:keys [source-index-names target-count source-host
-                    target-host shard-count]
+                    target-host]
              :as opts}]
   (let [target-index-names (get-target-index-names opts)
         indexer-done-latch (CountDownLatch. target-count)
@@ -174,8 +266,15 @@
                              splitter-policy
                              indexers
                              (fn [] @continue-flag)
-                             done-reporter)]
-    (create-target-indexes target-index-names opts)
+                             done-reporter
+                             (comp source2item make-doc))]
+    (create-target-indexes
+      source-index-names
+      target-index-names
+      opts)
     (in-daemon "scan-thread"
-      (doseq [item (get-item-stream source-host source-index-names)]
-        (splitter item)))))
+      (run-stream
+        source-host
+        source-index-names
+        splitter
+        opts))))

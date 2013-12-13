@@ -65,7 +65,6 @@
    ["--target" "ES location" :default "http://localhost:9200"]
    ["-h" "--help" "Display help" :flag true :default false]])
 
-(defrecord BulkItem [meta source])
 
 (defn quit
   ([]
@@ -79,6 +78,7 @@
        (shutdown-agents)
        (System/exit 0))))
 
+(defrecord BulkItem [meta source])
 (defn source2item [_index _type tag-progress offset source]
   (BulkItem.
    {:index
