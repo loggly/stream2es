@@ -8,13 +8,11 @@
   (:import [java.util.concurrent CountDownLatch]))
 
 (defn get-splitter-policy [opts]
-  ; XXX
-  (fn [item]
-    3))
+  (constantly 0))
 
 (defn get-target-index-names [opts]
   ; XXX
-  ["foo" "bar" "baz"])
+  ["testindex-1"])
 
 (def match-all
   (json/generate-string
