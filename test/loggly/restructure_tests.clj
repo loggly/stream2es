@@ -1,6 +1,7 @@
 (ns loggly.restructure-tests
   (:use [clojure test]
-        [loggly restructure]))
+        [loggly restructure]
+        [loggly.restructure indexing splitter]))
 
 (defn sleep [] (Thread/sleep 10))
 
@@ -8,7 +9,7 @@
   (let [done (atom false)
         collector (atom #{})
         pool (start-index-worker-pool
-               {:workers 3
+               {:workers-per-index 3
                 :queue-size 20
                 :done-notifier #(reset! done true)
                 :do-index #(swap! collector conj %)})]
