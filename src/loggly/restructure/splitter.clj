@@ -1,5 +1,6 @@
 (ns loggly.restructure.splitter
-  (:require [loggly.restructure.util :refer [in-thread]])
+  (:require [loggly.restructure.util :refer [in-thread
+                                             resetting-atom]])
   (:import [java.util.concurrent LinkedBlockingQueue]))
 
 (defn make-doc
@@ -21,6 +22,12 @@
      (when (:_id source)
        {:_id (str (:_id source))}))}
    (dissoc source :_type)))
+
+(def items-sent (resetting-atom 0))
+(def items-received (resetting-atom 0))
+
+(deref items-sent)
+(deref items-received)
 
 (defn start-splitter [policy indexers continue?
                       finish & [transformer]]
@@ -46,7 +53,10 @@
                              (finish ind-name))))
             (let [indexer-id (policy item)
                   indexer (nth indexers indexer-id)]
+              (swap! items-sent inc)
               (indexer (transformer item))
               (recur))))))
-    (fn [item] (.put q item))))
+    (fn [item]
+      (swap! items-received inc)
+      (.put q item))))
 

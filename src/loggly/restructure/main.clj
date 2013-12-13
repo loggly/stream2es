@@ -1,7 +1,8 @@
 (ns loggly.restructure.main
   (:require [stream2es.es :as es]
             [cheshire.core :as json]
-            [loggly.restructure.util :refer [make-url in-daemon refresh!]]
+            [loggly.restructure.util :refer [make-url in-daemon
+                                             refresh! resetting-atom]]
             [loggly.restructure.indexing :refer [start-indexers]]
             [loggly.restructure.splitter :refer [start-splitter]]
             [loggly.restructure.setup :refer [create-target-indexes]])
@@ -19,6 +20,9 @@
     {"query"
       {"match_all" {}}}))
 
+(def items-scanned (resetting-atom 0))
+(deref items-scanned)
+
 (defn run-stream [host index-names sink
                   {:keys [scroll-time scroll-size]}]
   (doseq [iname index-names]
@@ -27,6 +31,7 @@
                   match-all
                   scroll-time
                   scroll-size)]
+      (swap! items-scanned inc)
       (sink hit))
     (sink :index)
     (sink iname))

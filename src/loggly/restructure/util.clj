@@ -56,3 +56,8 @@
 (.remainingCapacity (get-queue 5 "foo"))
 
 (set! *warn-on-reflection* true)
+
+(defn resetting-atom [i]
+  (let [a (atom i)]
+    (register-perm-refresh #(reset! a i))
+    a))
