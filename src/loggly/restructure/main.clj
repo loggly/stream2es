@@ -1,7 +1,7 @@
 (ns loggly.restructure.main
   (:require [stream2es.es :as es]
             [cheshire.core :as json]
-            [loggly.restructure.util :refer [make-url in-daemon]]
+            [loggly.restructure.util :refer [make-url in-daemon refresh]]
             [loggly.restructure.indexing :refer [start-indexers]]
             [loggly.restructure.splitter :refer [start-splitter]]
             [loggly.restructure.setup :refer [create-target-indexes]])
