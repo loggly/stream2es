@@ -20,7 +20,7 @@
       :_type (:_type source)}
      (when (:_id source)
        {:_id (str (:_id source))}))}
-   source))
+   (dissoc source :_type)))
 
 (defn start-splitter [policy indexers continue?
                       finish & [transformer]]
