@@ -50,7 +50,7 @@
 
 (defn ^LinkedBlockingQueue get-queue [capacity q-name]
   (let [q (LinkedBlockingQueue. capacity)]
-    (in-daemon (str q-name " monitor")
+    (in-daemon (str q-name "-qmonitor")
       (loop []
         (Thread/sleep 5000)
         (let [cap (.remainingCapacity q)]
