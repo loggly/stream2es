@@ -41,6 +41,20 @@
   (-> doc :_source :_custid))
 
 (comment
+  (clojure.pprint/pprint (.take q))
+  (use 'loggly.restructure.splitter)
+  (-> q .take make-doc source2item clojure.pprint/pprint)
+  (def q (java.util.concurrent.LinkedBlockingQueue.))
+  (in-daemon "quick-scan"
+    (run-stream "ec2-23-20-250-74.compute-1.amazonaws.com"
+                ["000101.0000.shared.e4db46"
+                 "131210.2338.shared.8ad3e8"
+                 "131211.0450.shared.9dd071"]
+                #(.put q %)
+                {:scroll-time "30s"
+                 :scroll-size 100}
+                ))
+  (refresh!)
   (main
     {:workers-per-index 3
      :batch-size 100
