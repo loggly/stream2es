@@ -1,6 +1,5 @@
 (ns loggly.restructure-tests
   (:use [clojure test]
-        [loggly restructure]
         [loggly.restructure indexing splitter]))
 
 (defn sleep [] (Thread/sleep 10))
