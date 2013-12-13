@@ -71,6 +71,9 @@
               (recur))))))
     (fn [item] (.put q item))))
 
+(def bulks-indexed (resetting-atom 0))
+(deref bulks-indexed)
+
 (defn do-index
   "sends a list of documents to an url
 
@@ -78,7 +81,8 @@
   [target-url bulk]
   (when (and (sequential? bulk) (pos? (count bulk)))
     (let [url (format "%s/%s" target-url "_bulk") ]
-      (es/error-capturing-bulk url bulk make-indexable-bulk))))
+      (es/error-capturing-bulk url bulk make-indexable-bulk)
+      (swap! bulks-indexed inc))))
 
 (defn default-index-fn-fact [iname target-host]
   (let [url (make-url target-host iname)]
