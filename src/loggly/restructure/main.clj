@@ -43,11 +43,15 @@
 (defn get-cust [doc]
   (-> doc :_source :_custid))
 
+(in-daemon "hihi"
+           (throw (Exception.))
+           )
+
 (comment
   (clojure.pprint/pprint (.take q))
   (use 'loggly.restructure.splitter)
   (-> q .take make-doc source2item clojure.pprint/pprint)
-  (def q (java.util.concurrent.LinkedBlockingQueue.))
+  (def q (java.util.concurrent.LinkedBlockingQueue. 3))
   (in-daemon "quick-scan"
     (run-stream "ec2-23-20-250-74.compute-1.amazonaws.com"
                 ["000101.0000.shared.e4db46"
