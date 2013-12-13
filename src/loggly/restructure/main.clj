@@ -35,6 +35,22 @@
 (defn get-cust [doc]
   (-> doc :_source :_custid))
 
+(comment
+  (main
+    {:workers-per-index 3
+     :batch-size 100
+     :index-limit 1000000
+     :source-host "ec2-23-20-250-74.compute-1.amazonaws.com"
+     :target-host "ec2-23-20-250-74.compute-1.amazonaws.com"
+     :num-shards 5
+     :index-tag "hot"
+     :scroll-time "5m"
+     :scroll-size 500
+     :source-index-names ["000101.0000.shared.e4db46"
+                          "131210.2338.shared.8ad3e8"
+                          "131211.0450.shared.9dd071"]
+     :target-count 1}))
+
 (defn main [{:keys [source-index-names target-count source-host
                     target-host]
              :as opts}]
