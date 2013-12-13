@@ -28,12 +28,13 @@
      (log/trace "POSTing" (count (.getBytes data)) "bytes")
      (http/post url {:body data})))
 
-(-> "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/testindex-5/log/_count"
+(comment
+  (-> "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/testindex-20/log/_count"
     http/get
     :body
     (json/parse-string true)
     :count
-    )
+    ))
 
 (defn delete [url]
   (let [u (index-url url)]
