@@ -11,9 +11,12 @@
 (defn get-splitter-policy [opts]
   (constantly 0))
 
+(def index-number (atom 21))
+(deref index-number)
+
 (defn get-target-index-names [opts]
   ; XXX
-  ["testindex-1"])
+  [(str "testindex-" (swap! index-number inc))])
 
 (def match-all
   (json/generate-string
