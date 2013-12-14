@@ -111,7 +111,7 @@
               (make-url target-host index-name)
               "_bulk")
       events
-      make-indexable-bulk)
+      (constantly bulk))
     (catch InterruptedException e
       (throw e))
     (catch ThreadDeath e
@@ -138,7 +138,8 @@
           (pool
             {:events event-list
              :index-name iname
-             :target-host target-host}))
+             :target-host target-host
+             :bulk (make-indexable-bulk event-list)}))
         (str "indexer-" iname)
         #(.countDown latch)
         opts))))
