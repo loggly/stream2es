@@ -20,7 +20,7 @@
 (deflogger logger)
 
 (def index-opts
-  [["--workers-per-index"
+  [["--workers-per-index" ;XXX
     "# of simultaneous bulk requests to each target index"
     :default 8 :parse-fn parse-int]
    ["--batch-size" "number of docs in a bulk request"
