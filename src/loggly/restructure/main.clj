@@ -17,9 +17,13 @@
 (defn get-cust [doc]
   (-> doc :_source :_custid))
 
+(def count-by-cust (resetting-atom {}))
+(do @count-by-cust)
+
 (defn get-splitter-policy [{:keys [target-count num-shards]}]
   (fn [doc]
     (let [cust (get-cust doc)]
+      (swap! count-by-cust update-in [cust] (fnil inc 0))
       (mod (quot cust num-shards) target-count))))
 
 (def index-number (atom 60))
