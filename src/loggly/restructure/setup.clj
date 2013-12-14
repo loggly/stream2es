@@ -15,6 +15,19 @@
       {:required true
        :path "_custid"}}})
 
+(defn check-settings [expected target-url]
+  (let [result-settings (dissoc
+                          (es/settings target-url)
+                          ; this gets set by ES, ignore it
+                          :index.uuid)]
+    (when-not (= result-settings expected)
+      (let [[expected-missing unexpected] (diff expected result-settings)]
+        (throw
+          (Exception.
+            (str "settings on newly created index at " target-url
+                 " are missing " (or expected-missing {})
+                 " and unexpectedly contain " unexpected)))))))
+
 (defn create-target-indexes [[source-name] target-names
                              {:keys [source-host target-host
                                      num-shards index-tag]}]
@@ -32,10 +45,4 @@
           (throw (Exception. (str "target index " iname
                                   " already exists =/"))))
         (es/post target-url creation-json)
-        (let [result-settings (es/settings target-url)]
-          (when-not (= result-settings new-settings)
-            (error logger
-              (with-out-str
-                (println "settings are different -- maybe that's ok? ")
-                (pprint (take 2 (diff new-settings result-settings)))))))))))
-
+        (check-settings new-settings target-url)))))
