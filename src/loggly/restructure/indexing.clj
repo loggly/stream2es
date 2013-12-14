@@ -42,6 +42,7 @@
    stolen with modifications from stream2es main"
   [{:keys [workers-per-index done-notifier
            sink bulks-queued]}]
+  (debug logger "starting index worker pool")
   (let [q (get-queue bulks-queued "indexer pool")
         latch (CountDownLatch. workers-per-index)]
     ;; start index pool
@@ -74,6 +75,7 @@
                      (bulk-sink @building-batch)
                      (reset! batch-doc-count 0)
                      (reset! building-batch [])))]
+    (debug logger (str "starting " process-name))
     (in-thread process-name
       (loop []
         (let [item (.take q)]
