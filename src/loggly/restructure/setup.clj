@@ -1,7 +1,7 @@
 (ns loggly.restructure.setup
   (:require [loggly.restructure.util :refer [make-url]]
             [loggly.restructure.log :refer :all]
-            [stream2es.es :as es]
+            [loggly.restructure.es :as es]
             [cheshire.core :as json]
             [clojure.pprint :refer [pprint]]
             [clojure.data :refer [diff]]))

@@ -1,7 +1,11 @@
-(ns stream2es.es
+(ns loggly.restructure.es
   (:require [cheshire.core :as json]
             [clj-http.client :as http]
-            [stream2es.log :as log]))
+            [loggly.restructure.log :refer :all]))
+
+;;; Lifted wholesale from stream2es
+
+(deflogger logger)
 
 (defn components [url]
   (let [u (java.net.URL. url)
@@ -25,7 +29,7 @@
 
 (defn post
   ([url data]
-     (log/trace "POSTing" (count (.getBytes data)) "bytes")
+     (trace logger "POSTing" (count (.getBytes data)) "bytes")
      (http/post url {:body data})))
 
 (comment
@@ -38,7 +42,7 @@
 
 (defn delete [url]
   (let [u (index-url url)]
-    (log/info "delete index" u)
+    (info logger "delete index" u)
     (http/delete u {:throw-exceptions false})))
 
 (defn exists? [url]

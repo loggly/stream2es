@@ -1,8 +1,8 @@
 (ns loggly.restructure.main
-  (:require [stream2es.es :as es]
-            [cheshire.core :as json]
+  (:require [cheshire.core :as json]
             [clojure.string :as string]
             [clojure.tools.cli :refer [cli]]
+            [loggly.restructure.es :as es]
             [loggly.restructure.util :refer [make-url in-daemon parse-int
                                              refresh! resetting-atom]]
             [loggly.restructure.indexing :refer [start-indexers

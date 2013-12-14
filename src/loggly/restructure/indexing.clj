@@ -1,6 +1,6 @@
 (ns loggly.restructure.indexing
-  (:require [stream2es.es :as es]
-            [cheshire.core :as json]
+  (:require [cheshire.core :as json]
+            [loggly.restructure.es :as es]
             [loggly.restructure.log :refer :all]
             [loggly.restructure.util :refer [in-thread make-url parse-int
                                              resetting-atom get-queue]])
