@@ -85,7 +85,7 @@
           target-host]
     :as opts}]
   (let [target-index-names (get-target-index-names opts)
-        indexer-done-latch (CountDownLatch. target-count)
+        indexer-done-latch (CountDownLatch. 1)
         continue-flag      (atom true)
         indexers           (start-indexers
                              target-index-names

@@ -28,20 +28,24 @@
 
 (defn setup-indexer []
   (let [stop-signalled (atom false)
+        finished (atom false)
         collector (atom [])
         indexer (start-indexer
                   #(reset! stop-signalled true)
                   #(swap! collector conj %)
                   "indexer"
+                  #(reset! finished true)
                   {:batch-size 3
                    :indexer-docs-queued 20
                    :index-limit 5})]
     {:stop-signalled stop-signalled
      :collector collector
-     :indexer indexer}))
+     :indexer indexer
+     :finished finished}))
 
 (deftest indexer-test
-  (let [{:keys [stop-signalled collector indexer]} (setup-indexer)]
+  (let [{:keys [stop-signalled collector
+                indexer finished]} (setup-indexer)]
     (dotimes [i 5]
       (indexer i))
     (sleep)
@@ -50,21 +54,24 @@
       (indexer i))
     (sleep)
     (is @stop-signalled)
+    (is (not @finished))
 
     (indexer :stop)
     (sleep)
+    (is @finished)
     (is (= @collector
            [[0 1 2]
             [3 4 5]
             [6 7 8]
-            [9]
-            :stop]))))
+            [9]]))))
 
 (deftest empty-bulk-test
-  (let [{:keys [stop-signalled collector indexer]} (setup-indexer)]
+  (let [{:keys [stop-signalled collector
+                indexer finished]} (setup-indexer)]
     (indexer :stop)
     (sleep)
-    (is (= @collector [:stop]))))
+    (is @finished)
+    (is (= @collector []))))
 
 (defn setup-splitter [continue-fn]
   (let [last-index (atom nil)

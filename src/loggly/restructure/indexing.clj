@@ -33,17 +33,6 @@
    ["--bulks-queued" "number of bulk requests to queue"
     :default 100 :parse-fn parse-int]])
 
-(defn wrap-safely [f]
-  (fn [bulk]
-    (try (f bulk)
-      (catch InterruptedException e
-        (throw e))
-      (catch ThreadDeath e
-        (throw e))
-      (catch Throwable e
-        (swap! fails conj [bulk e])
-        (error logger (str "failed indexing " bulk) e)))))
-
 (defn start-index-worker-pool
   "takes a number of workers, a number of bulks to queue, a function
    to call on completion, and a function to index a single bulk.
@@ -52,19 +41,17 @@
 
    stolen with modifications from stream2es main"
   [{:keys [workers-per-index done-notifier
-           sink bulks-queued pool-name]}]
-  (let [q (get-queue bulks-queued pool-name)
+           sink bulks-queued]}]
+  (let [q (get-queue bulks-queued "indexer pool")
         latch (CountDownLatch. workers-per-index)]
     ;; start index pool
     (dotimes [n workers-per-index]
-      (in-thread (str pool-name "-" (inc n))
-        (do-until-stop
-          #(.take q)
-          (wrap-safely sink))
+      (in-thread (str "indexing worker " (inc n))
+        (do-until-stop #(.take q) sink)
         (debug logger "waiting for POSTs to finish")
         (.countDown latch)))
     ;; notify when done
-    (in-thread (str pool-name "-monitor")
+    (in-thread "pool shutdown signal"
       (.await latch)
       (debug logger "done indexing")
       (done-notifier))
@@ -75,7 +62,7 @@
           (.put q :stop))
         (.put q bulk)))))
 
-(defn start-indexer [signal-stop bulk-sink process-name
+(defn start-indexer [signal-stop bulk-sink process-name finish
                      {:keys [batch-size index-limit
                              indexer-docs-queued] :as opts}]
   (let [q (get-queue indexer-docs-queued process-name)
@@ -93,7 +80,7 @@
           (if (= item :stop)
             (do
               (do-flush)
-              (bulk-sink :stop))
+              (finish))
             (do
               (swap! building-batch conj item)
               (when (= (swap! batch-doc-count inc)
@@ -116,31 +103,42 @@
               "\n"))
        (apply str)))
 
-(defn do-index
-  "sends a list of documents to an url
-
-   stolen with modifications from stream2es"
-  [target-url bulk]
-  (when (and (sequential? bulk) (pos? (count bulk)))
-    (let [url (format "%s/%s" target-url "_bulk") ]
-      (es/error-capturing-bulk url bulk make-indexable-bulk)
-      (swap! bulks-indexed inc))))
-
-(defn default-index-fn-fact [iname target-host]
-  (let [url (make-url target-host iname)]
-    (fn [bulk] (do-index url bulk))))
+(defn index-mapped-bulk [{:keys [events index-name
+                                 bulk target-host]}]
+  (try
+    (es/error-capturing-bulk
+      (format "%s/%s"
+              (make-url target-host index-name)
+              "_bulk")
+      events
+      make-indexable-bulk)
+    (catch InterruptedException e
+      (throw e))
+    (catch ThreadDeath e
+      (throw e))
+    (catch Throwable e
+      (swap! fails conj [events e])
+      (error logger (str "failed indexing " events) e))))
 
 (defn start-indexers [index-names finish signal-stop
                       {:keys [target-host] :as opts}]
-  (let [index-fn-fact (:index-fn-fact opts
-                       default-index-fn-fact)]
+  (let [latch (CountDownLatch. (count index-names))
+        pool (start-index-worker-pool
+               (merge opts
+                 {:done-notifier finish
+                  :sink index-mapped-bulk}))]
+    (in-thread "indexer stop signal"
+      (debug logger "waiting for indexers to stop")
+      (.await latch)
+      (pool :stop))
     (for [iname index-names]
       (start-indexer
         signal-stop
-        (start-index-worker-pool
-          (merge opts
-            {:done-notifier finish
-             :sink (index-fn-fact iname target-host)
-             :pool-name (str "pool-" iname)} ))
+        (fn [event-list]
+          (pool
+            {:events event-list
+             :index-name iname
+             :target-host target-host}))
         (str "indexer-" iname)
+        #(.countDown latch)
         opts))))
