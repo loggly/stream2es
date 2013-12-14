@@ -31,10 +31,12 @@
     (.setUncaughtExceptionHandler t
       (reify Thread$UncaughtExceptionHandler
         (uncaughtException [_ t e]
-          (fatal
-            logger
-            (str "thread " t " died unexpectedly")
-            e))))
+          (when-not (or (instance? ThreadDeath e)
+                        (instance? InterruptedException e))
+            (fatal
+              logger
+              (str "thread " t " died unexpectedly")
+              e)))))
     (register-refresh #(.stop t))
     (.start t)
     nil))
