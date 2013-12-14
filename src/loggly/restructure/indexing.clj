@@ -83,9 +83,10 @@
         batch-doc-count (atom 0)
         total-doc-count (atom 0)
         do-flush (fn []
-                   (bulk-sink @building-batch)
-                   (reset! batch-doc-count 0)
-                   (reset! building-batch []))]
+                   (when (pos? @batch-doc-count)
+                     (bulk-sink @building-batch)
+                     (reset! batch-doc-count 0)
+                     (reset! building-batch [])))]
     (in-thread process-name
       (loop []
         (let [item (.take q)]
