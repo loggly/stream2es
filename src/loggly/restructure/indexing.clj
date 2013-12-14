@@ -18,7 +18,7 @@
 
 (count @fails)
 
-(-> fails deref first first count)
+(-> fails deref first first first)
 
 (map first @fails)
 (deflogger logger)
