@@ -60,6 +60,12 @@
             [9]
             :stop]))))
 
+(deftest empty-bulk-test
+  (let [{:keys [stop-signalled collector indexer]} (setup-indexer)]
+    (indexer :stop)
+    (sleep)
+    (is (= @collector [[] :stop]))))
+
 (defn setup-splitter [continue-fn]
   (let [last-index (atom nil)
         policy {:foo 0 :bar 1 :baz 2}
