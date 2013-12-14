@@ -32,14 +32,6 @@
      (trace logger "POSTing" (count (.getBytes data)) "bytes")
      (http/post url {:body data})))
 
-(comment
-  (-> "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/testindex-20/log/_count"
-    http/get
-    :body
-    (json/parse-string true)
-    :count
-    ))
-
 (defn delete [url]
   (let [u (index-url url)]
     (info logger "delete index" u)
@@ -135,11 +127,3 @@
 
 (defn filter-mapping [mapping cids]
   (update-in mapping [:log :properties] filter-keys (keep-key cids)))
-
-(filter-mapping {:other-top 'stuff
-                 :log
-                 {:other 'stuff
-                  :properties
-                  {:foo "bar" :1 "baz" :4 "qux"}}} [3 4 5])
-
-(set! *warn-on-reflection* true)

@@ -18,7 +18,6 @@
   (-> doc :_source :_custid))
 
 (def count-by-cust (resetting-atom {}))
-(do @count-by-cust)
 
 (defn get-splitter-policy [{:keys [target-count num-shards]}]
   (fn [doc]
@@ -27,7 +26,6 @@
       (mod (quot cust num-shards) target-count))))
 
 (def index-number (atom 186))
-(deref index-number)
 
 (defn get-fresh-index-name []
   (str "testindex-" (swap! index-number inc)))
@@ -42,7 +40,6 @@
       {"match_all" {}}}))
 
 (def items-scanned (resetting-atom 0))
-(deref items-scanned)
 
 (defn run-stream [host index-names sink
                   {:keys [scroll-time scroll-size]}]
@@ -80,45 +77,6 @@
 (def full-opts
   (cons
     "Deck Chairs: rebuilds indexes to reduce cluster state" opts))
-
-(identity opts)
-
-
-(comment
-  (clojure.pprint/pprint (.take q))
-  (use 'loggly.restructure.splitter)
-  (-> q .take make-doc source2item clojure.pprint/pprint)
-  (def q (java.util.concurrent.LinkedBlockingQueue. 3))
-  (let [fcount @items-scanned]
-    (Thread/sleep 10000)
-    (/ (- @items-scanned fcount) 10))
-  (in-daemon "quick-scan"
-    (run-stream "ec2-23-20-250-74.compute-1.amazonaws.com"
-                ["000101.0000.shared.e4db46"
-                 "131210.2338.shared.8ad3e8"
-                 "131211.0450.shared.9dd071"]
-                #(.put q %)
-                {:scroll-time "30s"
-                 :scroll-size 100}
-                ))
-  (refresh!)
-  (main
-    {:workers-per-index 10
-     :batch-size 1000
-     :index-limit 1000000
-     :source-host "ec2-23-20-250-74.compute-1.amazonaws.com"
-     :target-host "ec2-23-20-250-74.compute-1.amazonaws.com"
-     :num-shards 5
-     :index-tag "hot"
-     :scroll-time "5m"
-     :scroll-size 1000
-     :splitter-docs-queued 20000
-     :indexer-docs-queued 5000
-     :bulks-queued 100
-     :source-index-names ["000101.0000.shared.e4db46"
-                          "131210.2338.shared.8ad3e8"
-                          "131211.0450.shared.9dd071"]
-     :target-count 5}))
 
 (defn main
   "takes a parsed map of args as supplied by tools.cli"

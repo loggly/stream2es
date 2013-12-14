@@ -32,9 +32,6 @@
 (def items-sent (resetting-atom 0))
 (def items-received (resetting-atom 0))
 
-(deref items-sent)
-(deref items-received)
-
 (def splitter-opts
   [["--splitter-docs-queued" "# of docs to queue after scan"
     :default 10000 :parse-fn parse-int]])

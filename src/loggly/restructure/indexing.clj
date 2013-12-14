@@ -16,11 +16,6 @@
 (def fails (resetting-atom []))
 (deref fails)
 
-(count @fails)
-
-(-> fails deref first first first)
-
-(map first @fails)
 (deflogger logger)
 
 (def index-opts
@@ -108,7 +103,6 @@
     (fn [item] (.put q item))))
 
 (def bulks-indexed (resetting-atom 0))
-(deref bulks-indexed)
 
 (defn make-indexable-bulk [items]
   "stolen from stream2es."
