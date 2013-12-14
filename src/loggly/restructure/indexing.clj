@@ -111,7 +111,7 @@
               (make-url target-host index-name)
               "_bulk")
       events
-      (constantly bulk))
+      bulk)
     (catch InterruptedException e
       (throw e))
     (catch ThreadDeath e

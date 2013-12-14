@@ -42,8 +42,8 @@
     (http/get (format "%s/_mapping" (index-url url)))
     (catch Exception _)))
 
-(defn error-capturing-bulk [url items serialize-bulk]
-  (let [resp (json/decode (:body (post url (serialize-bulk items))) true)]
+(defn error-capturing-bulk [url items bulk]
+  (let [resp (json/decode (:body (post url bulk)) true)]
     (->> (:items resp)
          (map-indexed (fn [n obj]
                         (when (contains? (val (first obj)) :error)
