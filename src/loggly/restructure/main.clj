@@ -3,8 +3,9 @@
             [clojure.string :as string]
             [clojure.tools.cli :refer [cli]]
             [loggly.restructure.es :as es]
-            [loggly.restructure.util :refer [make-url in-daemon parse-int
-                                             refresh! resetting-atom]]
+            [loggly.restructure.util :refer [make-url in-daemon
+                                             parse-int refresh!
+                                             resetting-atom]]
             [loggly.restructure.indexing :refer [start-indexers
                                                  index-opts]]
             [loggly.restructure.splitter :refer [start-splitter

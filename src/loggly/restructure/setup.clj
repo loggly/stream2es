@@ -21,7 +21,8 @@
                           ; this gets set by ES, ignore it
                           :index.uuid)]
     (when-not (= result-settings expected)
-      (let [[expected-missing unexpected] (diff expected result-settings)]
+      (let [[expected-missing unexpected] (diff expected
+                                                result-settings)]
         (throw
           (Exception.
             (str "settings on newly created index at " target-url

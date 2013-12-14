@@ -61,7 +61,9 @@
         finished (atom false)
         indexers (for [i (range 3)]
                    (fn [x]
-                     (swap! collector update-in [i] (fnil conj []) x)))
+                     (swap! collector
+                            update-in [i]
+                            (fnil conj []) x)))
         splitter (start-splitter
                    policy
                    indexers
@@ -94,7 +96,9 @@
     (splitter :stop)
     (sleep)
     (is @finished)
-    (is (= @collector {0 [:foo :stop] 1 [:bar :stop] 2 [:baz :stop]}))
+    (is (= @collector {0 [:foo :stop]
+                       1 [:bar :stop]
+                       2 [:baz :stop]}))
     (is (= @last-index :all))
     ))
 

@@ -26,7 +26,8 @@
     :default 500 :parse-fn parse-int]
    ["--index-limit" "max number of docs to send to an index"
     :default Integer/MAX_VALUE :parse-fn parse-int]
-   ["--indexer-docs-queued" "# of docs to queue before building bulks"
+   ["--indexer-docs-queued"
+    "# of docs to queue before building bulks"
     :default 5000 :parse-fn parse-int]
    ["--bulks-queued" "number of bulk requests to queue"
     :default 100 :parse-fn parse-int]])
