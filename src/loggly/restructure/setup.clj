@@ -3,7 +3,6 @@
             [loggly.restructure.log :refer :all]
             [loggly.restructure.es :as es]
             [cheshire.core :as json]
-            [clojure.pprint :refer [pprint]]
             [clojure.data :refer [diff]]))
 
 (deflogger logger)

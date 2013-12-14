@@ -2,8 +2,9 @@
   (:require [cheshire.core :as json]
             [loggly.restructure.es :as es]
             [loggly.restructure.log :refer :all]
-            [loggly.restructure.util :refer [in-thread make-url parse-int
-                                             resetting-atom get-queue]])
+            [loggly.restructure.util :refer [in-thread make-url
+                                             parse-int get-queue
+                                             resetting-atom]])
   (:import [java.util.concurrent CountDownLatch]))
 
 (defn do-until-stop [source action]
