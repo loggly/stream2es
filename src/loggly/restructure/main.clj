@@ -26,7 +26,7 @@
       (swap! count-by-cust update-in [cust] (fnil inc 0))
       (mod (quot cust num-shards) target-count))))
 
-(def index-number (atom 60))
+(def index-number (atom 186))
 (deref index-number)
 
 (defn get-fresh-index-name []
