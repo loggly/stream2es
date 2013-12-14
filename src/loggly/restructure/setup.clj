@@ -40,6 +40,7 @@
                         {:settings new-settings
                          :mappings routing-mapping})]
     (doseq [iname target-names]
+      (debug logger (str "creating index " iname))
       (let [target-url (make-url target-host iname)]
         (when (es/exists? target-url)
           (throw (Exception. (str "target index " iname
