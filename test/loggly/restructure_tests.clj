@@ -26,7 +26,7 @@
     (is @done)
     ))
 
-(deftest indexer-test
+(defn setup-indexer []
   (let [stop-signalled (atom false)
         collector (atom [])
         indexer (start-indexer
@@ -36,6 +36,12 @@
                   {:batch-size 3
                    :indexer-docs-queued 20
                    :index-limit 5})]
+    {:stop-signalled stop-signalled
+     :collector collector
+     :indexer indexer}))
+
+(deftest indexer-test
+  (let [{:keys [stop-signalled collector indexer]} (setup-indexer)]
     (dotimes [i 5]
       (indexer i))
     (sleep)
