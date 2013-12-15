@@ -25,6 +25,10 @@
 
 (-> fails deref first first first pprint)
 
+; COUNT FAILS
+
+(count fails)
+
 ; SPLITTER STATS
 
 (deref items-sent)

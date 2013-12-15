@@ -15,7 +15,6 @@
         (recur)))))
 
 (def fails (resetting-atom []))
-(deref fails)
 
 (deflogger logger)
 
