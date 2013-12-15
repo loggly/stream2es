@@ -9,7 +9,7 @@
   (:import [java.util.concurrent CountDownLatch]))
 
 (defn get-splitter-policy [opts]
-  (constantly 0))
+  (constantly 0)) ; XXX
 
 (def index-number (atom 21))
 (deref index-number)
