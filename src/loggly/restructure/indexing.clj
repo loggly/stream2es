@@ -36,6 +36,17 @@
    ["--bulks-queued" "number of bulk requests to queue"
     :default 100 :parse-fn parse-int]])
 
+(defn wrap-safely [f]
+  (fn [bulk]
+    (try (f bulk)
+      (catch InterruptedException e
+        (throw e))
+      (catch ThreadDeath e
+        (throw e))
+      (catch Throwable e
+        (swap! fails conj [bulk e])
+        (error logger (str "failed indexing " bulk) e)))))
+
 (defn start-index-worker-pool
   "takes a number of workers, a number of bulks to queue, a function
    to call on completion, and a function to index a single bulk.
@@ -52,15 +63,7 @@
       (in-thread (str pool-name "-" (inc n))
         (do-until-stop
           #(.take q)
-          (fn [bulk]
-            (try (do-index bulk)
-              (catch InterruptedException e
-                (throw e))
-              (catch ThreadDeath e
-                (throw e))
-              (catch Throwable e
-                (swap! fails conj [bulk e])
-                (error logger (str "failed indexing " bulk) e)))))
+          (wrap-safely do-index))
         (debug logger "waiting for POSTs to finish")
         (.countDown latch)))
     ;; notify when done
