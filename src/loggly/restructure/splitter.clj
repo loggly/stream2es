@@ -9,6 +9,9 @@
 (defn make-doc
   "taken from stream2es. Ask Drew."
   [hit]
+  (when-not (or (-> hit :_source :_type)
+                (-> hit :_type))
+    (error logger (str "no type in hit: " hit)))
   (merge (:_source hit)
          {:_id (:_id hit)
           :_type (:_type hit)})  
