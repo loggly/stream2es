@@ -55,7 +55,7 @@
   (let [q (LinkedBlockingQueue. capacity)]
     (in-daemon (str q-name "-qmonitor")
       (loop []
-        (Thread/sleep 5000)
+        (Thread/sleep 1000)
         (let [cap (.remainingCapacity q)]
           (when (= cap 0)
             (debug logger (str "queue " q-name " is full")))
