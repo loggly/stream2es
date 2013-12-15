@@ -13,6 +13,7 @@
 (defn refresh! []
   (doseq [f @refreshes]
     (f))
+  (Thread/sleep 200)
   (doseq [f @perm-refreshes]
     (f))
   (reset! refreshes [])
