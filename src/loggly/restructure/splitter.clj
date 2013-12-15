@@ -38,12 +38,12 @@
                       {:keys [transformer splitter-docs-queued]}]
   (let [transformer (or transformer
                         #(-> % make-doc source2item))
-        q (get-queue splitter-docs-queued "splitter queue")
+        q (get-queue splitter-docs-queued "splitter")
         ; pack in a vector for quick lookups
         indexers (into [] indexers)
         flush-indexers (fn [] (doseq [indexer indexers]
                                 (indexer :stop)))]
-    (in-thread "splitter-thread"
+    (in-thread "splitter"
       (loop []
         (let [item (.take q)]
           (case item
