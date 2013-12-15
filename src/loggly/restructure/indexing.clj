@@ -112,6 +112,7 @@
               "_bulk")
       events
       bulk)
+    (swap! bulks-indexed inc)
     (catch InterruptedException e
       (throw e))
     (catch ThreadDeath e
