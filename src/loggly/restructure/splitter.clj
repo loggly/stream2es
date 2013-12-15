@@ -14,8 +14,7 @@
     (error logger (str "no type in hit: " hit)))
   (merge (:_source hit)
          {:_id (:_id hit)
-          :_type (:_type hit)})  
-  )
+          :_type (:_type hit)}))
 
 (defrecord BulkItem [meta source])
 (defn source2item [source]
