@@ -22,7 +22,7 @@
     (let [cust (get-cust doc)]
       (mod (quot cust num-shards) target-count))))
 
-(def index-number (atom 50))
+(def index-number (atom 60))
 (deref index-number)
 
 (defn get-target-index-names [opts]
