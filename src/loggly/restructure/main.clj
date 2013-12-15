@@ -79,9 +79,6 @@
 
 (identity opts)
 
-(in-daemon "hihi"
-           (throw (Exception.))
-           )
 
 (comment
   (clojure.pprint/pprint (.take q))
