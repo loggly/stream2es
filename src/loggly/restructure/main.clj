@@ -11,7 +11,7 @@
 (defn get-splitter-policy [opts]
   (constantly 0)) ; XXX
 
-(def index-number (atom 21))
+(def index-number (atom 50))
 (deref index-number)
 
 (defn get-target-index-names [opts]
