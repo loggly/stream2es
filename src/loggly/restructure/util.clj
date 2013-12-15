@@ -40,14 +40,16 @@
     nil))
 
 (defmacro in-daemon [thread-name & forms]
-  `(in-thread* ~thread-name
-               (fn [] ~@forms)
-               true))
+  `(in-thread*
+     ~thread-name
+     (fn [] ~@forms)
+     true))
 
 (defmacro in-thread [thread-name & forms]
-  `(in-thread* ~thread-name
-               (fn [] ~@forms)
-               false))
+  `(in-thread*
+     ~thread-name
+     (fn [] ~@forms)
+     false))
 
 (defn ^LinkedBlockingQueue get-queue [capacity q-name]
   (let [q (LinkedBlockingQueue. capacity)]
