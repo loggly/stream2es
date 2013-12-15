@@ -25,9 +25,12 @@
 (def index-number (atom 60))
 (deref index-number)
 
-(defn get-target-index-names [opts]
+(defn get-fresh-index-name []
+  (str "testindex-" (swap! index-number inc)))
+
+(defn get-target-index-names [{:keys [target-count]}]
   ; XXX
-  [(str "testindex-" (swap! index-number inc))])
+  (repeatedly target-count get-fresh-index-name))
 
 (def match-all
   (json/generate-string
