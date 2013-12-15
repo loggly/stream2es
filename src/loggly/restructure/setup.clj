@@ -21,7 +21,7 @@
   (let [source-url (make-url source-host source-name)
         source-settings (es/settings source-url)
         overrides {:index.routing.allocation.include.tag index-tag
-                   :index.number_of_shards num-shards}
+                   :index.number_of_shards (str num-shards)}
         new-settings (merge source-settings overrides)
         creation-json (json/generate-string
                         {:settings new-settings
