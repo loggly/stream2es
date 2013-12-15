@@ -12,8 +12,15 @@
             [loggly.restructure.setup :refer [create-target-indexes]])
   (:import [java.util.concurrent CountDownLatch]))
 
-(defn get-splitter-policy [opts]
-  (constantly 0)) ; XXX
+
+
+(defn get-cust [doc]
+  (-> doc :_source :_custid))
+
+(defn get-splitter-policy [{:keys [target-count num-shards]}]
+  (fn [doc]
+    (let [cust (get-cust doc)]
+      (mod (quot cust num-shards) target-count))))
 
 (def index-number (atom 50))
 (deref index-number)
@@ -43,9 +50,6 @@
     (sink :new-index)
     (sink iname))
   (sink :stop))
-
-(defn get-cust [doc]
-  (-> doc :_source :_custid))
 
 (def opts
   (concat splitter-opts index-opts
