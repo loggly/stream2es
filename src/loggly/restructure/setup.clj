@@ -6,7 +6,7 @@
 
 ; I think this should work?
 (def routing-mapping
-  {:order
+  {:log
     {:_routing
       {:required true
        :path "_custid"}}})
