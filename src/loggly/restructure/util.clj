@@ -73,3 +73,6 @@
   (let [a (atom i)]
     (register-perm-refresh #(reset! a i))
     a))
+
+(defn parse-int [s]
+  (Integer. s))

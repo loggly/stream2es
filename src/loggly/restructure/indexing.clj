@@ -2,7 +2,7 @@
   (:require [stream2es.es :as es]
             [cheshire.core :as json]
             [loggly.restructure.log :refer :all]
-            [loggly.restructure.util :refer [in-thread make-url
+            [loggly.restructure.util :refer [in-thread make-url parse-int
                                              resetting-atom get-queue]])
   (:import [java.util.concurrent CountDownLatch]))
 
@@ -22,6 +22,19 @@
 
 (map first @fails)
 (deflogger logger)
+
+(def index-opts
+  [["--workers-per-index"
+    "# of simultaneous bulk requests to each target index"
+    :default 8 :parse-fn parse-int]
+   ["--batch-size" "number of docs in a bulk request"
+    :default 500 :parse-fn parse-int]
+   ["--index-limit" "max number of docs to send to an index"
+    :default Integer/MAX_VALUE :parse-fn parse-int]
+   ["--indexer-docs-queued" "# of docs to queue before building bulks"
+    :default 5000 :parse-fn parse-int]
+   ["--bulks-queued" "number of bulk requests to queue"
+    :default 100 :parse-fn parse-int]])
 
 (defn start-index-worker-pool
   "takes a number of workers, a number of bulks to queue, a function

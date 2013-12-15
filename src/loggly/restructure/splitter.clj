@@ -1,6 +1,7 @@
 (ns loggly.restructure.splitter
   (:require [loggly.restructure.util :refer [resetting-atom
                                              in-thread
+                                             parse-int
                                              get-queue]]
             [loggly.restructure.log :refer :all]))
 
@@ -33,6 +34,10 @@
 
 (deref items-sent)
 (deref items-received)
+
+(def splitter-opts
+  [["--splitter-docs-queued" "# of docs to queue after scan"
+    :default 10000 :parse-fn parse-int]])
 
 (defn start-splitter [policy indexers continue? finish
                       {:keys [transformer splitter-docs-queued]}]

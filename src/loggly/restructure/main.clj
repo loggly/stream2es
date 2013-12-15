@@ -1,10 +1,14 @@
 (ns loggly.restructure.main
   (:require [stream2es.es :as es]
             [cheshire.core :as json]
-            [loggly.restructure.util :refer [make-url in-daemon
+            [clojure.string :as string]
+            [clojure.tools.cli :refer [cli]]
+            [loggly.restructure.util :refer [make-url in-daemon parse-int
                                              refresh! resetting-atom]]
-            [loggly.restructure.indexing :refer [start-indexers]]
-            [loggly.restructure.splitter :refer [start-splitter]]
+            [loggly.restructure.indexing :refer [start-indexers
+                                                 index-opts]]
+            [loggly.restructure.splitter :refer [start-splitter
+                                                 splitter-opts]]
             [loggly.restructure.setup :refer [create-target-indexes]])
   (:import [java.util.concurrent CountDownLatch]))
 
@@ -42,6 +46,31 @@
 
 (defn get-cust [doc]
   (-> doc :_source :_custid))
+
+(def opts
+  (concat splitter-opts index-opts
+    [["--source-host" "elasticsearch host to scan from"]
+     ["--target-host"
+      "elasticsearch host to index to (defaults to source-host)"]
+     ["--num-shards" "number of shards to build in target indexes"
+      :default 12 :parse-fn parse-int]
+     ["--index-tag" "tag to apply to target indexes" :default "hot"]
+     ["--scroll-time" "time to leave scroll connection open"
+      :default "10m"
+      ]
+     ["--scroll-size" "number of docs to scan at a time"
+      :default 1000 :parse-fn parse-int]
+     ["--source-index-names"
+      "comma-separated list of indexes to pull events from"
+      :parse-fn #(remove empty? (string/split % #","))]
+     ["--target-count" "number of indexes to index into"
+      :default 8 :parse-fn parse-int]]))
+
+(def full-opts
+  (cons
+    "Deck Chairs: rebuilds indexes to reduce cluster state" opts))
+
+(identity opts)
 
 (in-daemon "hihi"
            (throw (Exception.))
@@ -83,9 +112,11 @@
                           "131211.0450.shared.9dd071"]
      :target-count 1}))
 
-(defn main [{:keys [source-index-names target-count source-host
-                    target-host]
-             :as opts}]
+(defn main
+  "takes a parsed map of args as supplied by tools.cli"
+  [{:keys [source-index-names target-count source-host
+          target-host]
+    :as opts}]
   (let [target-index-names (get-target-index-names opts)
         indexer-done-latch (CountDownLatch. target-count)
         continue-flag      (atom true)
@@ -114,3 +145,24 @@
         source-index-names
         splitter
         opts))))
+
+(defn fail [msg]
+  (println msg)
+  (System/exit -1))
+
+(defn -main
+  "when deployed as a bin, this is the entry point"
+  [& args]
+  (let [[options extra-args banner] (apply cli args full-opts)]
+    (when (:help options)
+      (println banner)
+      (System/exit 0))
+    (when-not (seq (:source-index-names options))
+      (fail "must specify at least one source index"))
+    (when-not (:source-host options)
+      (fail "must specify an ES host to index from"))
+    ;; if target-host isn't specified, use source-host
+    (when (seq extra-args)
+      (fail (str "supplied extraneous args " extra-args)))
+    (main (merge {:target-host (:source-host options)}
+                 options))))
