@@ -84,19 +84,18 @@
                             update-in [i]
                             (fnil conj []) x)))
         splitter (start-splitter
-                   policy
-                   indexers
-                   continue-fn
-                   (fn [ind]
-                     (reset! finished true)
-                     (reset! last-index ind))
                    {:splitter-docs-queued 50
-                    :transformer identity})]
+                    :transformer identity
+                    :policy policy
+                    :indexers indexers
+                    :continue? continue-fn
+                    :finish (fn [ind]
+                              (reset! finished true)
+                              (reset! last-index ind))})]
     {:last-index last-index
      :collector collector
      :finished finished
-     :splitter splitter}
-    ))
+     :splitter splitter}))
 
 (deftest splitter-test
   (let [{:keys [last-index

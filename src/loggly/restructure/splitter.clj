@@ -36,8 +36,8 @@
   [["--splitter-docs-queued" "# of docs to queue after scan"
     :default 10000 :parse-fn parse-int]])
 
-(defn start-splitter [policy indexers continue? finish
-                      {:keys [transformer splitter-docs-queued]}]
+(defn start-splitter [{:keys [policy indexers continue? finish
+                              transformer splitter-docs-queued]}]
   (let [transformer (or transformer
                         #(-> % make-doc source2item))
         q (get-queue splitter-docs-queued "splitter")

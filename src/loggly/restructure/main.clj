@@ -97,11 +97,11 @@
                              (.await indexer-done-latch)
                              (println "done indexing up to " up-to))
         splitter           (start-splitter
-                             splitter-policy
-                             indexers
-                             (fn [] @continue-flag)
-                             done-reporter
-                             opts)]
+                             (merge opts
+                               {:policy splitter-policy
+                                :indexers indexers
+                                :continue? (fn [] @continue-flag)
+                                :finish done-reporter}))]
     (create-target-indexes
       source-index-names
       target-index-names
