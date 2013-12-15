@@ -1,7 +1,10 @@
 (ns loggly.restructure.splitter
   (:require [loggly.restructure.util :refer [resetting-atom
                                              in-thread
-                                             get-queue]]))
+                                             get-queue]]
+            [loggly.restructure.log :refer :all]))
+
+(deflogger logger)
 
 (defn make-doc
   "taken from stream2es. Ask Drew."

@@ -1,7 +1,7 @@
 (ns loggly.restructure.indexing
   (:require [stream2es.main :refer [make-indexable-bulk]]
             [stream2es.es :as es]
-            [stream2es.log :as log]
+            [loggly.restructure.log :refer :all]
             [loggly.restructure.util :refer [in-thread make-url
                                              resetting-atom get-queue]])
   (:import [java.util.concurrent CountDownLatch]))
@@ -12,6 +12,8 @@
       (when-not (= :stop x)
         (action x)
         (recur)))))
+
+(deflogger logger)
 
 (defn start-index-worker-pool
   "takes a number of workers, a number of bulks to queue, a function
@@ -28,12 +30,12 @@
     (dotimes [n workers-per-index]
       (in-thread (str pool-name "-" (inc n))
         (do-until-stop #(.take q) do-index)
-        (log/debug "waiting for POSTs to finish")
+        (debug logger "waiting for POSTs to finish")
         (.countDown latch)))
     ;; notify when done
     (in-thread (str pool-name "-monitor")
       (.await latch)
-      (log/debug "done indexing")
+      (debug logger "done indexing")
       (done-notifier))
     ;; This becomes :indexer above!
     (fn [bulk]
