@@ -99,22 +99,22 @@
                 ))
   (refresh!)
   (main
-    {:workers-per-index 5
-     :batch-size 500
+    {:workers-per-index 10
+     :batch-size 1000
      :index-limit 1000000
      :source-host "ec2-23-20-250-74.compute-1.amazonaws.com"
      :target-host "ec2-23-20-250-74.compute-1.amazonaws.com"
      :num-shards 5
      :index-tag "hot"
      :scroll-time "5m"
-     :scroll-size 8000
-     :splitter-docs-queued 10000
-     :indexer-docs-queued 100
-     :bulks-queued 10
+     :scroll-size 1000
+     :splitter-docs-queued 20000
+     :indexer-docs-queued 5000
+     :bulks-queued 100
      :source-index-names ["000101.0000.shared.e4db46"
                           "131210.2338.shared.8ad3e8"
                           "131211.0450.shared.9dd071"]
-     :target-count 1}))
+     :target-count 5}))
 
 (defn main
   "takes a parsed map of args as supplied by tools.cli"
