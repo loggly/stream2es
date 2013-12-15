@@ -13,6 +13,14 @@
         (action x)
         (recur)))))
 
+(def fails (resetting-atom []))
+(deref fails)
+
+(count @fails)
+
+(-> fails deref first first count)
+
+(map first @fails)
 (deflogger logger)
 
 (defn start-index-worker-pool
@@ -29,7 +37,17 @@
     ;; start index pool
     (dotimes [n workers-per-index]
       (in-thread (str pool-name "-" (inc n))
-        (do-until-stop #(.take q) do-index)
+        (do-until-stop
+          #(.take q)
+          (fn [bulk]
+            (try (do-index bulk)
+              (catch InterruptedException e
+                (throw e))
+              (catch ThreadDeath e
+                (throw e))
+              (catch Throwable e
+                (swap! fails conj [bulk e])
+                (error logger (str "failed indexing " bulk) e)))))
         (debug logger "waiting for POSTs to finish")
         (.countDown latch)))
     ;; notify when done
