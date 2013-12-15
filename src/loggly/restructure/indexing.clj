@@ -1,6 +1,6 @@
 (ns loggly.restructure.indexing
-  (:require [stream2es.main :refer [make-indexable-bulk]]
-            [stream2es.es :as es]
+  (:require [stream2es.es :as es]
+            [cheshire.core :as json]
             [loggly.restructure.log :refer :all]
             [loggly.restructure.util :refer [in-thread make-url
                                              resetting-atom get-queue]])
@@ -93,6 +93,15 @@
 
 (def bulks-indexed (resetting-atom 0))
 (deref bulks-indexed)
+
+(defn make-indexable-bulk [items]
+  "stolen from stream2es."
+  (->> (for [item items]
+         (str (json/generate-string (:meta item))
+              "\n"
+              (json/generate-string (:source item))
+              "\n"))
+       (apply str)))
 
 (defn do-index
   "sends a list of documents to an url
