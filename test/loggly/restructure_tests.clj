@@ -11,7 +11,7 @@
                {:workers-per-index 3
                 :bulks-queued 20
                 :done-notifier #(reset! done true)
-                :do-index #(swap! collector conj %)
+                :sink #(swap! collector conj %)
                 :pool-name "test-pool"})]
 
     (dotimes [i 20]

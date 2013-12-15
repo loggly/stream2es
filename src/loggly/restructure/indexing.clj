@@ -55,7 +55,7 @@
 
    stolen with modifications from stream2es main"
   [{:keys [workers-per-index done-notifier
-           do-index bulks-queued pool-name]}]
+           sink bulks-queued pool-name]}]
   (let [q (get-queue bulks-queued pool-name)
         latch (CountDownLatch. workers-per-index)]
     ;; start index pool
@@ -63,7 +63,7 @@
       (in-thread (str pool-name "-" (inc n))
         (do-until-stop
           #(.take q)
-          (wrap-safely do-index))
+          (wrap-safely sink))
         (debug logger "waiting for POSTs to finish")
         (.countDown latch)))
     ;; notify when done
@@ -143,7 +143,7 @@
         (start-index-worker-pool
           (merge opts
             {:done-notifier finish
-             :do-index (index-fn-fact iname target-host)
+             :sink (index-fn-fact iname target-host)
              :pool-name (str "pool-" iname)} ))
         (str "indexer-" iname)
         opts))))
