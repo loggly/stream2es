@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [clojure.tools.cli :refer [cli]]
             [loggly.restructure.es :as es]
+            [loggly.restructure.log :refer :all]
             [loggly.restructure.util :refer [make-url in-daemon
                                              resetting-atom
                                              parse-int]]
@@ -45,9 +46,12 @@
 
 (def items-scanned (resetting-atom 0))
 
+(deflogger logger)
+
 (defn run-stream [host index-names sink
                   {:keys [scroll-time scroll-size]}]
   (doseq [iname index-names]
+    (info logger (str "beginning scan for index " iname))
     (doseq [hit (es/scan
                   (make-url host iname)
                   match-all
