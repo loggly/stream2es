@@ -11,12 +11,13 @@
 (def perm-refreshes (atom []))
 
 (defn refresh! []
-  (doseq [f @refreshes]
-    (f))
+  (let [refreshes-snap @refreshes]
+    (reset! refreshes [])
+    (doseq [f refreshes-snap]
+      (f)))
   (Thread/sleep 200)
   (doseq [f @perm-refreshes]
     (f))
-  (reset! refreshes [])
   nil)
 
 (defn register-refresh [f]
