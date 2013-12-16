@@ -66,7 +66,7 @@
       "elasticsearch host to index to (defaults to source-host)"]
      ["--num-shards" "number of shards to build in target indexes"
       :default 9 :parse-fn parse-int]
-     ["--index-tag" "tag to apply to target indexes" :default "hot"]
+     ["--index-tag" "tag to apply to target indexes" :default "cold"]
      ["--scroll-time" "time to leave scroll connection open"
       :default "10m"
       ]
