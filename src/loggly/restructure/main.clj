@@ -73,7 +73,11 @@
       "comma-separated list of indexes to pull events from"
       :parse-fn #(remove empty? (string/split % #","))]
      ["--target-count" "number of indexes to index into"
-      :default 8 :parse-fn parse-int]]))
+      :default 8 :parse-fn parse-int]
+     ["--atimeout" "ES ack timeout seconds" :default 60
+      :parse-fn parse-int]
+     ["--mtimeout" "ES master timeout seconds" :default 120
+      :parse-fn parse-int]]))
 
 (def full-opts
   (cons

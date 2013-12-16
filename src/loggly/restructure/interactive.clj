@@ -101,6 +101,8 @@
      :num-shards 5
      :index-tag "hot"
      :scroll-time "5m"
+     :atimeout 50
+     :mtimeout 130
      :scroll-size 1000
      :splitter-docs-queued 20000
      :indexer-docs-queued 5000

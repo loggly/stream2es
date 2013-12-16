@@ -29,8 +29,8 @@
                  " and unexpectedly contain " unexpected)))))))
 
 (defn create-target-indexes [[source-name] target-names
-                             {:keys [source-host target-host
-                                     num-shards index-tag]}]
+                             {:keys [source-host target-host atimeout
+                                     num-shards index-tag mtimeout]}]
   (let [source-url (make-url source-host source-name)
         source-settings (es/settings source-url)
         overrides {:index.routing.allocation.include.tag index-tag
@@ -41,7 +41,12 @@
                          :mappings routing-mapping})]
     (doseq [iname target-names]
       (debug logger (str "creating index " iname))
-      (let [target-url (make-url target-host iname)]
+      (let [target-url (make-url target-host iname)
+            full-url (format
+                       "%s?master_timeout=%ds&timeout=%ds"
+                       target-url
+                       mtimeout
+                       atimeout)]
         (when (es/exists? target-url)
           (throw (Exception. (str "target index " iname
                                   " already exists =/"))))
