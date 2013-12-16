@@ -26,7 +26,8 @@
           (Exception.
             (str "settings on newly created index at " target-url
                  " are missing " (or expected-missing {})
-                 " and unexpectedly contain " unexpected)))))))
+                 " and unexpectedly contain "
+                 (or unexpected {}))))))))
 
 (defn create-target-indexes [[source-name] target-names
                              {:keys [source-host target-host atimeout
