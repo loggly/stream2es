@@ -30,8 +30,9 @@
                  (or unexpected {}))))))))
 
 (defn create-target-indexes [[source-name] target-names
-                             {:keys [source-host target-host atimeout
-                                     num-shards index-tag mtimeout]}]
+                             {:keys [source-host target-host
+                                     num-shards index-tag
+                                     mtimeout gtimeout atimeout]}]
   (let [source-url (make-url source-host source-name)
         source-settings (es/settings source-url)
         overrides {:index.routing.allocation.include.tag index-tag
@@ -52,4 +53,5 @@
           (throw (Exception. (str "target index " iname
                                   " already exists =/"))))
         (es/post target-url creation-json)
-        (check-settings new-settings target-url)))))
+        (check-settings new-settings target-url)
+        (es/wait-for-green target-host iname gtimeout)))))

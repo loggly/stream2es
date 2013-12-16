@@ -127,3 +127,12 @@
 
 (defn filter-mapping [mapping cids]
   (update-in mapping [:log :properties] filter-keys (keep-key cids)))
+
+(def green-url
+  "http://%s:9200/_cluster/health/%s?wait_for_status=green&timeout=%ds")
+
+(defn wait-for-green [host iname timeout]
+  (info logger (str "waiting up to " timeout " seconds for index "
+                    iname " to become green"))
+  ;; http/get will throw on bad status
+  (http/get (format green-url host iname timeout)))

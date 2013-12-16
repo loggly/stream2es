@@ -77,7 +77,10 @@
      ["--atimeout" "ES ack timeout seconds" :default 60
       :parse-fn parse-int]
      ["--mtimeout" "ES master timeout seconds" :default 120
-      :parse-fn parse-int]]))
+      :parse-fn parse-int]
+     ["--gtimeout"
+      "Seconds to wait for created index to become green"
+      :default 900 :parse-fn parse-int]]))
 
 (def full-opts
   (cons

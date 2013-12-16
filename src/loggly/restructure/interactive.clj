@@ -103,6 +103,7 @@
      :scroll-time "5m"
      :atimeout 50
      :mtimeout 130
+     :gtimeout 900
      :scroll-size 1000
      :splitter-docs-queued 20000
      :indexer-docs-queued 5000
