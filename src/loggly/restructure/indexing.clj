@@ -122,8 +122,9 @@
       (swap! fails conj [events e])
       (error logger (str "failed indexing " events) e))))
 
-(defn start-indexers [index-names finish signal-stop
-                      {:keys [target-host] :as opts}]
+(defn start-indexers [{:keys [target-host index-names
+                              finish signal-stop]
+                       :as opts}]
   (let [latch (CountDownLatch. (count index-names))
         pool (start-index-worker-pool
                (merge opts

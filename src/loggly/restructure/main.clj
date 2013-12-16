@@ -88,10 +88,13 @@
         indexer-done-latch (CountDownLatch. 1)
         continue-flag      (atom true)
         indexers           (start-indexers
-                             target-index-names
-                             #(.countDown indexer-done-latch)
-                             #(reset! continue-flag false)
-                             opts)
+                             (merge opts
+                               {:index-names target-index-names
+                                :finish #(.countDown
+                                           indexer-done-latch)
+                                :signal-stop #(reset!
+                                                continue-flag
+                                                false)}))
         splitter-policy    (get-splitter-policy opts)
         done-reporter      (fn [up-to]
                              (.await indexer-done-latch)
