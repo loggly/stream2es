@@ -161,8 +161,8 @@
       (fail "must specify at least one source index"))
     (when-not (:source-host options)
       (fail "must specify an ES host to index from"))
-    ;; if target-host isn't specified, use source-host
     (when (seq extra-args)
       (fail (str "supplied extraneous args " extra-args)))
+    ;; if target-host isn't specified, use source-host
     (main (merge {:target-host (:source-host options)}
                  options))))
