@@ -41,12 +41,29 @@
   (run-stream "ec2-23-20-250-74.compute-1.amazonaws.com"
               ["000101.0000.shared.e4db46"
                "131210.2338.shared.8ad3e8"
-               "131211.0450.shared.9dd071"]
+;               "131211.0450.shared.9dd071"
+               ]
               #(.put q %)
               {:scroll-time "30s"
                :scroll-size 100}
               ))
-(clojure.pprint/pprint (.take q))
+
+(def orig-event(first(scan
+  "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/131210.2338.shared.8ad3e8"
+  (json/generate-string {:query {:term {:_custid 149}}})
+  "1m"
+  5)))
+(def copied-event(first(scan
+  "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/testindex-245"
+  (json/generate-string {:query {:term {:_custid 149}}})
+  "1m"
+  5)))
+
+  (pprint(clojure.data/diff orig-event copied-event))
+(pprint orig-event)
+(pprint copied-event)
+(def random-event (.take q))
+(pprint random-event)
 (-> q .take make-doc source2item clojure.pprint/pprint)
 
 ; RATE
