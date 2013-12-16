@@ -18,6 +18,9 @@
 (defn get-cust [doc]
   (-> doc :_source :_custid))
 
+(defn get-rec-ts [event]
+  (-> event :_source :_rects))
+
 (def count-by-cust (resetting-atom {}))
 
 (defn get-splitter-policy [{:keys [target-count num-shards]}]
@@ -86,6 +89,21 @@
   (cons
     "Deck Chairs: rebuilds indexes to reduce cluster state" opts))
 
+(defn get-visitor [opts]
+  (let [storage (atom {})]
+    {:visit-event
+      (fn [event]
+        (let [cust (get-cust event)
+              ts (get-rec-ts event)]
+          (swap! storage update-in [cust]
+            (fn [stats]
+              (-> stats
+                (or {:count 0 :min-rec ts :max-rec ts})
+                (update-in [:count] inc)
+                (update-in [:min-rec] min ts)
+                (update-in [:max-rec] max ts))))))
+     :dump-stats #(deref storage)}))
+
 (defn main
   "takes a parsed map of args as supplied by tools.cli"
   [{:keys [source-index-names target-count source-host
@@ -103,13 +121,18 @@
                                                 continue-flag
                                                 false)}))
         splitter-policy    (get-splitter-policy opts)
+        visitor            (get-visitor opts)
+        visit-event        (:visit-event visitor)
         done-reporter      (fn [up-to]
                              (.await indexer-done-latch)
-                             (println "done indexing up to " up-to))
+                             (println "done indexing up to " up-to)
+                             (println "got stats "
+                                      ((:dump-stats visitor))))
         splitter           (start-splitter
                              (merge opts
                                {:policy splitter-policy
                                 :indexers indexers
+                                :visit-event visit-event
                                 :continue? (fn [] @continue-flag)
                                 :finish done-reporter}))]
     (create-target-indexes

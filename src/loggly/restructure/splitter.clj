@@ -37,9 +37,11 @@
     :default 10000 :parse-fn parse-int]])
 
 (defn start-splitter [{:keys [policy indexers continue? finish
-                              transformer splitter-docs-queued]}]
+                              transformer splitter-docs-queued
+                              visit-event]}]
   (let [transformer (or transformer
                         #(-> % make-doc source2item))
+        visit-event (or visit-event (fn [_]))
         q (get-queue splitter-docs-queued "splitter")
         ; pack in a vector for quick lookups
         indexers (into [] indexers)
@@ -60,6 +62,7 @@
                              (finish ind-name))))
             (let [indexer-id (policy item)
                   indexer (nth indexers indexer-id)]
+              (visit-event item)
               (swap! items-sent inc)
               (indexer (transformer item))
               (recur))))))
