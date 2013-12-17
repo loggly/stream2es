@@ -38,9 +38,14 @@
 (defn get-fresh-index-name []
   (str "testindex-" (swap! index-number inc)))
 
-(defn get-target-index-names [{:keys [target-count]}]
-  ; XXX
-  (repeatedly target-count get-fresh-index-name))
+(defn get-target-index-names [{:keys [target-count seq-indexes
+                                      source-index-names]}]
+  ;; seq-indexes is for testing -- so we can use the same source
+  ;; indexes over and over again without deleting the targets
+  (if seq-indexes
+    (repeatedly target-count get-fresh-index-name)
+    (for [i (range target-count)]
+      (format "%s-%d-r" (first source-index-names) i))))
 
 (def match-all
   (json/generate-string
