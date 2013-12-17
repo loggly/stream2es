@@ -31,11 +31,11 @@
         finished (atom false)
         collector (atom [])
         indexer (start-indexer
-                  #(reset! stop-signalled true)
-                  #(swap! collector conj %)
-                  "indexer"
-                  #(reset! finished true)
-                  {:batch-size 3
+                  {:signal-stop #(reset! stop-signalled true)
+                   :bulk-sink #(swap! collector conj %)
+                   :process-name "indexer"
+                   :finish #(reset! finished true)
+                   :batch-size 3
                    :indexer-docs-queued 20
                    :index-limit 5})]
     {:stop-signalled stop-signalled

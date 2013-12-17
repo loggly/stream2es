@@ -62,8 +62,8 @@
           (.put q :stop))
         (.put q bulk)))))
 
-(defn start-indexer [signal-stop bulk-sink process-name finish
-                     {:keys [batch-size index-limit
+(defn start-indexer [{:keys [batch-size index-limit signal-stop
+                             bulk-sink process-name finish
                              indexer-docs-queued] :as opts}]
   (let [q (get-queue indexer-docs-queued process-name)
         building-batch (atom [])
@@ -136,13 +136,13 @@
       (pool :stop))
     (for [iname index-names]
       (start-indexer
-        signal-stop
-        (fn [event-list]
-          (pool
-            {:events event-list
-             :index-name iname
-             :target-host target-host
-             :bulk (make-indexable-bulk event-list)}))
-        (str "indexer-" iname)
-        #(.countDown latch)
-        opts))))
+        (merge opts
+          {:signal-stop signal-stop
+           :bulk-sink (fn [event-list]
+                        (pool
+                          {:events event-list
+                           :index-name iname
+                           :target-host target-host
+                           :bulk (make-indexable-bulk event-list)}))
+           :process-name (str "indexer-" iname)
+           :finish #(.countDown latch)})))))
