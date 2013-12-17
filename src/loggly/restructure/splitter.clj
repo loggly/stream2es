@@ -55,7 +55,7 @@
             :stop (do
                     (flush-indexers)
                     (finish :all))
-            :new-index (let [ind-name (.take q)]
+            :end-index (let [ind-name (.take q)]
                          (if (continue?)
                            (recur)
                            (do

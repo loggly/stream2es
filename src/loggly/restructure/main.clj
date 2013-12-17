@@ -62,7 +62,7 @@
                   scroll-size)]
       (swap! items-scanned inc)
       (sink hit))
-    (sink :new-index)
+    (sink :end-index)
     (sink iname))
   (sink :stop))
 

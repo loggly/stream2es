@@ -107,7 +107,7 @@
     (is (= @collector
            {0 [:foo] 1 [:bar]}))
     (is (not @finished))
-    (splitter :new-index)
+    (splitter :end-index)
     (splitter "hello world")
     (splitter :baz)
     (splitter :stop)
@@ -125,7 +125,7 @@
                 splitter]} (setup-splitter (constantly false))]
     (splitter :foo)
     (splitter :bar)
-    (splitter :new-index)
+    (splitter :end-index)
     (splitter "hello world")
     (splitter :baz)
     (sleep)
