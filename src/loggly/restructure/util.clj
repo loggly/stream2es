@@ -60,7 +60,7 @@
       (while true
         (Thread/sleep 1000)
         (let [cap (.remainingCapacity q)]
-          (when (= cap 0)
+          (when (zero? cap)
             (debug logger (str "queue " q-name " is full")))
           (when (= cap capacity)
             (debug logger (str "queue " q-name " is empty"))))))
