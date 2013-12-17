@@ -23,8 +23,7 @@
 
     (pool :stop)
     (sleep)
-    (is @done)
-    ))
+    (is @done)))
 
 (defn setup-indexer []
   (let [stop-signalled (atom false)
@@ -117,8 +116,7 @@
     (is (= @collector {0 [:foo :stop]
                        1 [:bar :stop]
                        2 [:baz :stop]}))
-    (is (= @last-index :all))
-    ))
+    (is (= @last-index :all))))
 
 (deftest splitter-check-stop-on-index
   (let [{:keys [last-index
