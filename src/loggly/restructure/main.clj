@@ -12,7 +12,8 @@
             [loggly.restructure.splitter :refer [start-splitter
                                                  splitter-opts]]
             [loggly.restructure.setup :refer [create-target-indexes]])
-  (:import [java.util.concurrent CountDownLatch]))
+  (:import [java.util.concurrent CountDownLatch])
+  (:gen-class))
 
 
 
