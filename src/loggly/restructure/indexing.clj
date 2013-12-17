@@ -96,8 +96,9 @@
 
 (def bulks-indexed (resetting-atom 0))
 
-(defn make-indexable-bulk [items]
+(defn make-indexable-bulk
   "stolen from stream2es."
+  [items]
   (->> (for [item items]
          (str (json/generate-string (:meta item))
               "\n"

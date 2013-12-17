@@ -18,8 +18,9 @@
           :_type (:_type hit)}))
 
 (defrecord BulkItem [meta source])
-(defn source2item [source]
+(defn source2item
   "taken from stream2es. Ask Drew."
+  [source]
   (BulkItem.
    {:index
     (merge
