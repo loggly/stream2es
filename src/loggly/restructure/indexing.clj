@@ -19,8 +19,8 @@
 (deflogger logger)
 
 (def index-opts
-  [[nil "--workers-per-index NWORKERS" ;XXX
-    "# of simultaneous bulk requests to each target index"
+  [[nil "--num-index-workers NWORKERS" ;XXX
+    "# of simultaneous bulk requests to run at a time"
     :default 8 :parse-fn parse-int]
    [nil "--batch-size NEVENTS" "number of events in a bulk request"
     :default 500 :parse-fn parse-int]
@@ -40,13 +40,13 @@
    list of events or with :stop to signal done
 
    stolen with modifications from stream2es main"
-  [{:keys [workers-per-index done-notifier
+  [{:keys [num-index-workers done-notifier
            sink bulks-queued]}]
   (debug logger "starting index worker pool")
   (let [q (get-queue bulks-queued "indexer pool")
-        latch (CountDownLatch. workers-per-index)]
+        latch (CountDownLatch. num-index-workers)]
     ;; start index pool
-    (dotimes [n workers-per-index]
+    (dotimes [n num-index-workers]
       (in-thread (str "indexing worker " (inc n))
         (do-until-stop #(.take q) sink)
         (debug logger "waiting for POSTs to finish")
@@ -59,7 +59,7 @@
     ;; This becomes :indexer above!
     (fn [bulk]
       (if (= bulk :stop)
-        (dotimes [n workers-per-index]
+        (dotimes [n num-index-workers]
           (.put q :stop))
         (.put q bulk)))))
 

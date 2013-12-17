@@ -104,7 +104,7 @@
 (do
   (refresh!)
   (main
-    {:workers-per-index 10
+    {:num-index-workers 10
      :seq-indexes true
      :batch-size 1000
      :index-limit 1000000

@@ -8,7 +8,7 @@
   (let [done (atom false)
         collector (atom #{})
         pool (start-index-worker-pool
-               {:workers-per-index 3
+               {:num-index-workers 3
                 :bulks-queued 20
                 :done-notifier #(reset! done true)
                 :sink #(swap! collector conj %)
