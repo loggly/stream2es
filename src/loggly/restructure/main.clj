@@ -18,8 +18,8 @@
 
 
 
-(defn get-cust [doc]
-  (-> doc :_source :_custid))
+(defn get-cust [event]
+  (-> event :_source :_custid))
 
 (defn get-rec-ts [event]
   (-> event :_source :_rects))
@@ -27,8 +27,8 @@
 (def count-by-cust (resetting-atom {}))
 
 (defn get-splitter-policy [{:keys [target-count num-shards]}]
-  (fn [doc]
-    (let [cust (get-cust doc)]
+  (fn [event]
+    (let [cust (get-cust event)]
       (swap! count-by-cust update-in [cust] (fnil inc 0))
       (mod (quot cust num-shards) target-count))))
 
@@ -78,7 +78,7 @@
      [nil "--scroll-time Xm" "time to leave scroll connection open"
       :default "10m"
       ]
-     [nil "--scroll-size NDOCS" "number of docs to scan at a time"
+     [nil "--scroll-size NEVENTS" "number of events to scan at a time"
       :default 1000 :parse-fn parse-int]
      [nil "--source-index-names ind1,ind2"
       "comma-separated list of indexes to pull events from"

@@ -116,8 +116,8 @@
      :mtimeout 130
      :gtimeout 900
      :scroll-size 1000
-     :splitter-docs-queued 20000
-     :indexer-docs-queued 5000
+     :splitter-events-queued 20000
+     :indexer-events-queued 5000
      :bulks-queued 100
      :source-index-names source-indexes
      :target-count 5})

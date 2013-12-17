@@ -33,16 +33,17 @@
 (def items-received (resetting-atom 0))
 
 (def splitter-opts
-  [[nil "--splitter-docs-queued NDOCS" "# of docs to queue after scan"
+  [[nil "--splitter-events-queued NEVENTS"
+    "# of events to queue after scan"
     :default 10000 :parse-fn parse-int]])
 
 (defn start-splitter [{:keys [policy indexers continue? finish
-                              transformer splitter-docs-queued
+                              transformer splitter-events-queued
                               visit-event]}]
   (let [transformer (or transformer
                         #(-> % make-doc source2item))
         visit-event (or visit-event (fn [_]))
-        q (get-queue splitter-docs-queued "splitter")
+        q (get-queue splitter-events-queued "splitter")
         ; pack in a vector for quick lookups
         indexers (into [] indexers)
         flush-indexers (fn [] (doseq [indexer indexers]

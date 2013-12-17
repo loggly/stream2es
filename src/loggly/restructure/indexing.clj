@@ -22,12 +22,13 @@
   [[nil "--workers-per-index NWORKERS" ;XXX
     "# of simultaneous bulk requests to each target index"
     :default 8 :parse-fn parse-int]
-   [nil "--batch-size NDOCS" "number of docs in a bulk request"
+   [nil "--batch-size NEVENTS" "number of events in a bulk request"
     :default 500 :parse-fn parse-int]
-   [nil "--index-limit NDOCS" "max number of docs to send to an index"
+   [nil "--index-limit NEVENTS"
+    "max number of events to send to an index"
     :default Integer/MAX_VALUE :parse-fn parse-int]
-   [nil "--indexer-docs-queued NDOCS"
-    "# of docs to queue before building bulks"
+   [nil "--indexer-events-queued NEVENTS"
+    "# of events to queue before building bulks"
     :default 5000 :parse-fn parse-int]
    [nil "--bulks-queued NBULKS" "number of bulk requests to queue"
     :default 100 :parse-fn parse-int]])
@@ -36,7 +37,7 @@
   "takes a number of workers, a number of bulks to queue, a function
    to call on completion, and a function to index a single bulk.
    Returns a function that can be called with a
-   list of documents or with :stop to signal done
+   list of events or with :stop to signal done
 
    stolen with modifications from stream2es main"
   [{:keys [workers-per-index done-notifier
@@ -64,15 +65,15 @@
 
 (defn start-indexer [{:keys [batch-size index-limit signal-stop
                              bulk-sink process-name finish
-                             indexer-docs-queued] :as opts}]
-  (let [q (get-queue indexer-docs-queued process-name)
+                             indexer-events-queued] :as opts}]
+  (let [q (get-queue indexer-events-queued process-name)
         building-batch (atom [])
-        batch-doc-count (atom 0)
-        total-doc-count (atom 0)
+        batch-event-count (atom 0)
+        total-event-count (atom 0)
         do-flush (fn []
-                   (when (pos? @batch-doc-count)
+                   (when (pos? @batch-event-count)
                      (bulk-sink @building-batch)
-                     (reset! batch-doc-count 0)
+                     (reset! batch-event-count 0)
                      (reset! building-batch [])))]
     (debug logger (str "starting " process-name))
     (in-thread process-name
@@ -84,10 +85,10 @@
               (finish))
             (do
               (swap! building-batch conj item)
-              (when (= (swap! batch-doc-count inc)
+              (when (= (swap! batch-event-count inc)
                        batch-size)
                 (do-flush))
-              (when (> (swap! total-doc-count inc)
+              (when (> (swap! total-event-count inc)
                        index-limit)
                 (signal-stop))
               (recur))))))

@@ -35,7 +35,7 @@
                    :process-name "indexer"
                    :finish #(reset! finished true)
                    :batch-size 3
-                   :indexer-docs-queued 20
+                   :indexer-events-queued 20
                    :index-limit 5})]
     {:stop-signalled stop-signalled
      :collector collector
@@ -83,7 +83,7 @@
                             update-in [i]
                             (fnil conj []) x)))
         splitter (start-splitter
-                   {:splitter-docs-queued 50
+                   {:splitter-events-queued 50
                     :transformer identity
                     :policy policy
                     :indexers indexers
