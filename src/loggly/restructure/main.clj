@@ -107,7 +107,7 @@
 (defn main
   "takes a parsed map of args as supplied by tools.cli"
   [{:keys [source-index-names target-count source-host
-          target-host]
+           target-host]
     :as opts}]
   (let [target-index-names (get-target-index-names opts)
         indexer-done-latch (CountDownLatch. 1)
