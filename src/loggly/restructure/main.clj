@@ -1,7 +1,8 @@
 (ns loggly.restructure.main
   (:require [cheshire.core :as json]
             [clojure.string :as string]
-            [clojure.tools.cli :refer [cli]]
+            [clojure.tools.cli :refer [parse-opts]]
+            [clojure.pprint :refer [pprint]]
             [loggly.restructure.es :as es]
             [loggly.restructure.log :refer :all]
             [loggly.restructure.util :refer [make-url in-daemon
@@ -66,33 +67,37 @@
 
 (def opts
   (concat splitter-opts index-opts
-    [["--source-host" "elasticsearch host to scan from"]
-     ["--target-host"
+    [["-h" "--help" "display this help message"]
+     [nil "--source-host eshost01" "elasticsearch host to scan from"]
+     [nil "--target-host eshost02"
       "elasticsearch host to index to (defaults to source-host)"]
-     ["--num-shards" "number of shards to build in target indexes"
+     [nil "--num-shards NSHARDS" "number of shards to build in target indexes"
       :default 9 :parse-fn parse-int]
-     ["--index-tag" "tag to apply to target indexes" :default "cold"]
-     ["--scroll-time" "time to leave scroll connection open"
+     [nil "--index-tag hot|cold" "tag to apply to target indexes"
+      :default "cold" :validate [#{"hot" "cold"} "must be one of hot|cold"]]
+     [nil "--scroll-time Xm" "time to leave scroll connection open"
       :default "10m"
       ]
-     ["--scroll-size" "number of docs to scan at a time"
+     [nil "--scroll-size NDOCS" "number of docs to scan at a time"
       :default 1000 :parse-fn parse-int]
-     ["--source-index-names"
+     [nil "--source-index-names ind1,ind2"
       "comma-separated list of indexes to pull events from"
       :parse-fn #(remove empty? (string/split % #","))]
-     ["--target-count" "number of indexes to index into"
+     [nil "--target-count NINDEXES" "number of indexes to index into"
       :default 8 :parse-fn parse-int]
-     ["--atimeout" "ES ack timeout seconds" :default 60
+     [nil "--atimeout NSECS" "ES ack timeout seconds" :default 60
       :parse-fn parse-int]
-     ["--mtimeout" "ES master timeout seconds" :default 120
+     [nil "--mtimeout NSECS" "ES master timeout seconds" :default 120
       :parse-fn parse-int]
-     ["--gtimeout"
+     [nil "--gtimeout NSECS"
       "Seconds to wait for created index to become green"
       :default 900 :parse-fn parse-int]]))
 
-(def full-opts
-  (cons
-    "Deck Chairs: rebuilds indexes to reduce cluster state" opts))
+(defn print-usage [opt-summary]
+  (println
+    "Deck Chairs: rebuilds indexes to reduce cluster state")
+  (println)
+  (println opt-summary))
 
 (defn get-visitor [opts]
   (let [storage (atom {})]
@@ -151,23 +156,31 @@
         splitter
         opts))))
 
-(defn fail [msg]
+(defn fail [msg opt-summary]
+  (print-usage opt-summary)
+  (println)
   (println msg)
   (System/exit -1))
 
 (defn -main
   "when deployed as a bin, this is the entry point"
   [& args]
-  (let [[options extra-args banner] (apply cli args full-opts)]
+  (let [{:keys [options arguments errors summary]}
+        (parse-opts args opts)]
     (when (:help options)
-      (println banner)
+      (print-usage summary)
       (System/exit 0))
+    (when (seq errors)
+      (fail (string/join \newline errors) summary))
     (when-not (seq (:source-index-names options))
-      (fail "must specify at least one source index"))
+      (fail "must specify at least one source index" summary))
     (when-not (:source-host options)
-      (fail "must specify an ES host to index from"))
-    (when (seq extra-args)
-      (fail (str "supplied extraneous args " extra-args)))
+      (fail "must specify an ES host to index from" summary))
+    (when (seq arguments)
+      (fail (str "supplied extraneous args " arguments) summary))
     ;; if target-host isn't specified, use source-host
-    (main (merge {:target-host (:source-host options)}
-                 options))))
+    (let [parsed-opts (merge
+                        {:target-host (:source-host options)}
+                        options)]
+      (debug logger (str "calling main with opts " parsed-opts))
+      (main parsed-opts))))

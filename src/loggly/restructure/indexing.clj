@@ -19,17 +19,17 @@
 (deflogger logger)
 
 (def index-opts
-  [["--workers-per-index" ;XXX
+  [[nil "--workers-per-index NWORKERS" ;XXX
     "# of simultaneous bulk requests to each target index"
     :default 8 :parse-fn parse-int]
-   ["--batch-size" "number of docs in a bulk request"
+   [nil "--batch-size NDOCS" "number of docs in a bulk request"
     :default 500 :parse-fn parse-int]
-   ["--index-limit" "max number of docs to send to an index"
+   [nil "--index-limit NDOCS" "max number of docs to send to an index"
     :default Integer/MAX_VALUE :parse-fn parse-int]
-   ["--indexer-docs-queued"
+   [nil "--indexer-docs-queued NDOCS"
     "# of docs to queue before building bulks"
     :default 5000 :parse-fn parse-int]
-   ["--bulks-queued" "number of bulk requests to queue"
+   [nil "--bulks-queued NBULKS" "number of bulk requests to queue"
     :default 100 :parse-fn parse-int]])
 
 (defn start-index-worker-pool

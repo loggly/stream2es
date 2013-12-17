@@ -7,7 +7,7 @@
   :dependencies [[cheshire "5.0.1"]
                  [clj-http "0.6.3"]
                  [org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.cli "0.2.2"]
+                 [org.clojure/tools.cli "0.3.0"]
                  [slingshot "0.10.3"]
                  [org.tukaani/xz "1.3"]
                  [log4j "1.2.17"]

@@ -33,7 +33,7 @@
 (def items-received (resetting-atom 0))
 
 (def splitter-opts
-  [["--splitter-docs-queued" "# of docs to queue after scan"
+  [[nil "--splitter-docs-queued NDOCS" "# of docs to queue after scan"
     :default 10000 :parse-fn parse-int]])
 
 (defn start-splitter [{:keys [policy indexers continue? finish
