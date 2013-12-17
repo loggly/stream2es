@@ -1,11 +1,24 @@
 (ns loggly.restructure.setup
-  (:require [loggly.restructure.util :refer [make-url]]
+  (:require [loggly.restructure.util :refer [make-url parse-int]]
             [loggly.restructure.log :refer :all]
             [loggly.restructure.es :as es]
             [cheshire.core :as json]
             [clojure.data :refer [diff]]))
 
 (deflogger logger)
+
+(def setup-opts
+  [[nil "--num-shards NSHARDS" "number of shards to build in target indexes"
+    :default 9 :parse-fn parse-int]
+   [nil "--index-tag hot|cold" "tag to apply to target indexes"
+    :default "cold" :validate [#{"hot" "cold"} "must be one of hot|cold"]]
+   [nil "--atimeout NSECS" "ES ack timeout seconds" :default 60
+    :parse-fn parse-int]
+   [nil "--mtimeout NSECS" "ES master timeout seconds" :default 120
+    :parse-fn parse-int]
+   [nil "--gtimeout NSECS"
+    "Seconds to wait for created index to become green"
+    :default 900 :parse-fn parse-int]])
 
 ; I think this should work?
 (def routing-mapping

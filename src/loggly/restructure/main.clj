@@ -12,7 +12,8 @@
                                                  index-opts]]
             [loggly.restructure.splitter :refer [start-splitter
                                                  splitter-opts]]
-            [loggly.restructure.setup :refer [create-target-indexes]])
+            [loggly.restructure.setup :refer [create-target-indexes
+                                              setup-opts]])
   (:import [java.util.concurrent CountDownLatch])
   (:gen-class))
 
@@ -66,15 +67,11 @@
   (sink :stop))
 
 (def opts
-  (concat splitter-opts index-opts
+  (concat splitter-opts index-opts setup-opts
     [["-h" "--help" "display this help message"]
      [nil "--source-host eshost01" "elasticsearch host to scan from"]
      [nil "--target-host eshost02"
       "elasticsearch host to index to (defaults to source-host)"]
-     [nil "--num-shards NSHARDS" "number of shards to build in target indexes"
-      :default 9 :parse-fn parse-int]
-     [nil "--index-tag hot|cold" "tag to apply to target indexes"
-      :default "cold" :validate [#{"hot" "cold"} "must be one of hot|cold"]]
      [nil "--scroll-time Xm" "time to leave scroll connection open"
       :default "10m"
       ]
@@ -84,14 +81,7 @@
       "comma-separated list of indexes to pull events from"
       :parse-fn #(remove empty? (string/split % #","))]
      [nil "--target-count NINDEXES" "number of indexes to index into"
-      :default 8 :parse-fn parse-int]
-     [nil "--atimeout NSECS" "ES ack timeout seconds" :default 60
-      :parse-fn parse-int]
-     [nil "--mtimeout NSECS" "ES master timeout seconds" :default 120
-      :parse-fn parse-int]
-     [nil "--gtimeout NSECS"
-      "Seconds to wait for created index to become green"
-      :default 900 :parse-fn parse-int]]))
+      :default 8 :parse-fn parse-int]]))
 
 (defn print-usage [opt-summary]
   (println
