@@ -12,4 +12,10 @@
                  [org.tukaani/xz "1.3"]
                  [log4j "1.2.17"]
                  [criterium "0.4.2"]]
-  )
+  :plugins  [[lein-bin "0.3.2"]]
+  :bin {:name "deck-chairs"
+        :bootclasspath true}
+  :main loggly.restructure.main
+  :aot [loggly.restructure.main]
+  :repl-options {:init-ns loggly.restructure.interactive
+                 :host "0.0.0.0"})
