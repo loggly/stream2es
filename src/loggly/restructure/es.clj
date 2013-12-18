@@ -136,3 +136,11 @@
                     iname " to become green"))
   ;; http/get will throw on bad status
   (http/get (format green-url host iname timeout)))
+
+(defn index-count [host iname]
+  (->
+    (format "http://%s:9200/%s/log/_count" host iname)
+    http/get
+    :body
+    (json/parse-string true)
+    :count))
