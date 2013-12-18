@@ -34,7 +34,7 @@
 
 (defn delete [url]
   (let [u (index-url url)]
-    (info logger "delete index" u)
+    (info logger (str "delete index " u))
     (http/delete u {:throw-exceptions false})))
 
 (defn exists? [url]
