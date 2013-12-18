@@ -12,7 +12,8 @@
                  [org.tukaani/xz "1.3"]
                  [log4j "1.2.17"]
                  [criterium "0.4.2"]
-                 [loggly/loggly-indexmanager "1.0-SNAPSHOT"]]
+                 [loggly/loggly-indexmanager "1.0-SNAPSHOT"]
+                 [org.clojure/data.priority-map "0.0.4"]]
   :plugins  [[lein-bin "0.3.2"]]
   :bin {:name "deck-chairs"
         :bootclasspath true}
