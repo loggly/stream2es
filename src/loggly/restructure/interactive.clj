@@ -103,23 +103,26 @@
 
 (do
   (refresh!)
-  (main
-    {:num-index-workers 10
-     :seq-indexes true
-     :batch-size 1000
-     :index-limit 1000000
-     :source-host eshost
-     :target-host eshost
-     :num-shards 5
-     :index-tag "hot"
-     :scroll-time "5m"
-     :atimeout 50
-     :mtimeout 130
-     :gtimeout 900
-     :scroll-size 1000
-     :splitter-events-queued 20000
-     :indexer-events-queued 5000
-     :bulks-queued 100
-     :source-index-names source-indexes
-     :target-count 5})
+  (try
+    (main
+      {:num-index-workers 10
+       :seq-indexes true
+       :batch-size 1000
+       :index-limit 1000000
+       :source-host eshost
+       :target-host eshost
+       :num-shards 5
+       :index-tag "hot"
+       :scroll-time "5m"
+       :atimeout 50
+       :mtimeout 130
+       :gtimeout 900
+       :scroll-size 1000
+       :splitter-events-queued 20000
+       :indexer-events-queued 5000
+       :bulks-queued 100
+       :source-index-names source-indexes
+       :target-count 5})
+    (catch Throwable e
+      (error logger "oops" e)))
 ))
