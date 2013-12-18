@@ -109,6 +109,22 @@
                 (update-in [:max-rec] max ts))))))
      :dump-stats #(deref storage)}))
 
+(defn verify-counts [source-host target-host source-index-names
+                     target-index-names visitor]
+  (let [observed-count (reduce +
+                         (map (comp :count second)
+                           ((:dump-stats @visitor-holder))))
+        source-count (reduce +
+                       (for [iname source-index-names]
+                         (es/count source-host iname)))
+        target-count (reduce +
+                       (for [iname target-index-names]
+                         (es/count target-host iname)))]
+    (info logger (str "final counts "
+                      {:observed-count observed-count
+                       :source-count source-count
+                       :target-count target-count}))))
+
 (defn main
   "takes a parsed map of args as supplied by tools.cli"
   [{:keys [source-index-names target-count source-host
@@ -132,7 +148,11 @@
                              (.await indexer-done-latch)
                              (println "done indexing up to " up-to)
                              (println "got stats "
-                                      ((:dump-stats visitor))))
+                                      ((:dump-stats visitor)))
+                             (verify-counts source-host target-host
+                                            source-index-names
+                                            target-index-names
+                                            visitor))
         splitter           (start-splitter
                              (merge opts
                                {:policy splitter-policy
