@@ -11,7 +11,8 @@
                  [slingshot "0.10.3"]
                  [org.tukaani/xz "1.3"]
                  [log4j "1.2.17"]
-                 [criterium "0.4.2"]]
+                 [criterium "0.4.2"]
+                 [loggly/loggly-indexmanager "1.0-SNAPSHOT"]]
   :plugins  [[lein-bin "0.3.2"]]
   :bin {:name "deck-chairs"
         :bootclasspath true}
