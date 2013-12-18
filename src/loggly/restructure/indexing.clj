@@ -72,9 +72,8 @@
         total-event-count (atom 0)
         do-flush (fn []
                    (when (pos? @batch-event-count)
-                     (bulk-sink @building-batch)
-                     (reset! batch-event-count 0)
-                     (reset! building-batch [])))]
+                     (bulk-sink (replace! building-batch []))
+                     (reset! batch-event-count 0)))]
     (debug logger (str "starting " process-name))
     (in-thread process-name
       (loop []

@@ -10,9 +10,18 @@
 (def refreshes (atom []))
 (def perm-refreshes (atom []))
 
+(defn replace!
+  "Sets a to new-val while returning the very last value a held
+  before resetting."
+  [a new-val]
+  (loop []
+    (let [old-val @a]
+      (if (compare-and-set! a old-val new-val)
+        old-val
+        (recur)))))
+
 (defn refresh! []
-  (let [refreshes-snap @refreshes]
-    (reset! refreshes [])
+  (let [refreshes-snap (replace! refreshes [])]
     (doseq [f refreshes-snap]
       (f)))
   (Thread/sleep 200)
