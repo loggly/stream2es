@@ -4,7 +4,8 @@
             [loggly.restructure.log :refer :all]
             [loggly.restructure.util :refer [in-thread make-url
                                              parse-int get-queue
-                                             resetting-atom]])
+                                             resetting-atom
+                                             replace!]])
   (:import [java.util.concurrent CountDownLatch]))
 
 (defn do-until-stop [source action]
