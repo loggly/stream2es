@@ -82,3 +82,8 @@
 
 (defn parse-int [s]
   (Integer. s))
+
+(defmacro map-of [& names]
+  (into {}
+    (for [n names]
+      [(keyword n) n])))
