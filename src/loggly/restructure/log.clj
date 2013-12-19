@@ -1,11 +1,13 @@
 (ns loggly.restructure.log
   (:import (org.apache.log4j Logger)))
 
-(defmacro deflogger [logger-name]
-  `(def ~(with-meta logger-name
-           (assoc (meta logger-name)
-             :private true
-             :tag Logger))
+(defmacro deflogger
+  "Gets a Log4J Logger for the current namespace and assigns it
+   to logger-name"
+  [logger-name]
+  `(def ~(vary-meta logger-name assoc
+           :private true
+           :tag Logger)
      (Logger/getLogger (str *ns*))))
 
 (defmacro fatal [logger & args]

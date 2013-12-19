@@ -29,7 +29,7 @@
 
 (defn post
   ([url data]
-     (trace logger "POSTing" (count (.getBytes data)) "bytes")
+     (trace logger (str "POSTing" (count (.getBytes data)) "bytes"))
      (http/post url {:body data})))
 
 (defn delete [url]

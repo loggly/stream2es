@@ -1,4 +1,4 @@
-(ns loggly.restructure.index
+#_(ns loggly.restructure.index
   (:require [clojure.data.priority-map :refer [priority-map]])
   (:import [clojure.lang ExceptionInfo]
            [java.util.concurrent CountDownLatch
@@ -11,9 +11,23 @@
   (IndexDAO/queryByName index-name))
 
 (defn get-imdb-assignments [imdb-indexes]
-  (when-first [ix imdb-indexes]
-    (concat (AssignmentDAO/queryByIndex (.iid ix))
-            (get-imdb-assignments (rest imdb-indexes)))))
+  (mapcat #(AssignmentDAO/queryByIndex (.iid %)) imdb-indexes))
+
+(defn expired-assn? [assn]
+  ; XXX
+  false)
+
+(defn get-cust-sets [assns]
+  (let [inds (set (map index-for-assn assns))]
+    (into {}
+      (for [ind inds]
+        (map cust-for-assn assns)))))
+
+(future (+ 2 2 ))
+
+(require ['criterium.core :refer ['quick-bench]])
+
+(comment (quick-bench (deref (future (+ 2 2)) 200 nil)))
 
 (defmacro if-first [[v s] iform eform]
   `(if-let [s# (seq ~s)]
@@ -21,45 +35,34 @@
        ~iform)
      ~eform))
 
-(defn merge-customers [imdb-assns]
-  (loop [assns imdb-assns
-         counts {}
-         merged-assns {}]
-    (if-first [assn assns]
-      (let [cid (.cid assn)
-            cid-count (+ (cid counts 0) (.statsEventCount assn))]
-        (recur
-          (rest assns)
-          (assoc counts cid cid-count)
-          (assoc merged-assns cid {:cid cid :stats-event-count cid-count})))
-      merged-assns)))
+(defn merge-customers [imdb-assigns]
+  (let [cids (set (map #(.cid %) imdb-assigns))]
+    (into {}
+      (for [cid cids]
+        (let [event-count (->>
+                            imdb-assigns
+                            (filter #(= cid (.cid %)))
+                            (map #(.statsEVentCount %))
+                            (reduce +))]
+          {:cid cid :stats-event-count event-count})))))
 
 (defn get-retention [cid]
   ;XXX
   14)
 
 (defn add-retentions [assns]
-  (map (fn [assn]
-        {:cid (:cid assn)
-         :stats-event-count (:stats-event-count assn)
-         :retention (get-retention (:cid assn))})
-       assns))
+  (for [assn assns]
+    (assoc assn
+      :retention (get-retention (:cid assn)))))
 
-(defn compare-by [ks x y]
-  (loop [ks ks]
-    (if-first [k ks]
-      (let [ret (compare (k x) (k y))]
-        (if (= ret 0)
-          (recur (rest ks))
-          ret))
-      0)))
-
-(defn by-retention-events [x y]
-  (let [c (compare (:retention y) (:retention x))]
-    (if (not= c 0)
-      c
-      (let [c (compare (:stats-event-count y) (:stats-event-count x))]
-        c))))
+(defn compare-by [ks]
+  (fn [x y]
+    (or (->>
+          ks
+          (map (fn [k] (compare (k x) (k y))))
+          (remove #(= % 0))
+          first)
+        0)))
 
 (defn get-src-assns [index-names]
   (->> index-names
@@ -67,7 +70,7 @@
        get-imdb-assignments
        merge-customers
        add-retentions
-       (sort by-retention-events)))
+       (sort (compare-by [:retention :stats-event-count]))))
 
 (defn build-dst-assns [source-index-names target-count]
   (let [src-assns (get-src-assns source-index-names)]
@@ -89,6 +92,4 @@
 
 ; order by (retention, stats_event_count) descending
 (defn get-splitter-policy [{:keys [source-index-names target-count] :as opts}]
-  (let [dst-assns (build-dst-assns source-index-names target-count)]
-    (fn [custid]
-      (custid dst-assns))))
+  (build-dst-assns source-index-names target-count))
