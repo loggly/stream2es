@@ -113,7 +113,7 @@
                      target-index-names visitor]
   (let [observed-count (reduce +
                          (map (comp :count second)
-                           ((:dump-stats @visitor-holder))))
+                           ((:dump-stats visitor))))
         source-count (reduce +
                        (for [iname source-index-names]
                          (es/count source-host iname)))
