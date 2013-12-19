@@ -116,10 +116,10 @@
                            ((:dump-stats visitor))))
         source-count (reduce +
                        (for [iname source-index-names]
-                         (es/count source-host iname)))
+                         (es/index-count source-host iname)))
         target-count (reduce +
                        (for [iname target-index-names]
-                         (es/count target-host iname)))]
+                         (es/index-count target-host iname)))]
     (info logger (str "final counts "
                       {:observed-count observed-count
                        :source-count source-count
