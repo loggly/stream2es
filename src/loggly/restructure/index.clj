@@ -21,7 +21,9 @@
   (let [inds (set (map index-for-assn assns))]
     (into {}
       (for [ind inds]
-        (map cust-for-assn assns)))))
+        [ind (->> assns
+               (filter #(= ind (ind-for-assn %)))
+               (map cust-for-assn))]))))
 
 (future (+ 2 2 ))
 
