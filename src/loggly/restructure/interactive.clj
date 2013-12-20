@@ -2,7 +2,8 @@
   (:use [loggly.restructure main indexing splitter util log es setup])
   (:require [cheshire.core :as json]
             [clojure.pprint :refer [pprint]]
-            [clj-http.client :as http]))
+            [clj-http.client :as http]
+            [criterium.core :refer [bench quick-bench]]))
 
 ; For development only, not imported by any package
 ; This is basically intended for a vim-fireplace/CIDER workflow -- highlight
@@ -10,16 +11,18 @@
 
 (set! *warn-on-reflection* true)
 
+(identity *3)
+
+(+ 2 2)
+
 (comment
 
 ; COUNT
 
-(-> "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/testindex-20/log/_count"
-  http/get
-  :body
-  (json/parse-string true)
-  :count
-  )
+
+(identity eshost)
+
+(.contains "foo" "f")
 
 ; GRAB FIRST FAILED EVEUNT
 
@@ -47,6 +50,7 @@
               {:scroll-time "30s"
                :scroll-size 100}
               ))
+  (let [o (Object.)] (bench (locking o)))
 
 (def orig-event(first(scan
   "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/131210.2338.shared.8ad3e8"
@@ -93,13 +97,16 @@
 (def eshost "ec2-23-20-250-74.compute-1.amazonaws.com")
 
 (def source-indexes
-  ["000101.0000.shared.e4db46"
-   "131210.2338.shared.8ad3e8"
+  [
    "131211.0450.shared.9dd071"])
 
 ; SCRATCH
+  ;
+(reduce + (map (comp :count second) ((:dump-stats @visitor-holder))))
 
 ; MAIN
+  ;
+(deflogger logger)
 
 (do
   (refresh!)

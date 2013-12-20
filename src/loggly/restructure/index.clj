@@ -1,6 +1,8 @@
 (ns loggly.restructure.index
   (:require [clojure.data.priority-map :refer [priority-map]]
-            [loggly.restructure.util :refer [map-of]])
+            [loggly.restructure.util :refer [map-of]]
+            [cheshire.core :as json]
+            [clj-http.client :as http])
   (:import [clojure.lang ExceptionInfo]
            [java.util.concurrent CountDownLatch
                                  LinkedBlockingQueue
@@ -11,28 +13,38 @@
 (defn get-imdb-index [index-name]
   (IndexDAO/queryByName index-name))
 
-(defn get-imdb-assignments [imdb-indexes]
-  (mapcat #(AssignmentDAO/queryByIndex (.iid %)) imdb-indexes))
+(->>
+  "http://ec2-23-20-250-74.compute-1.amazonaws.com:9200/_aliases"
+  http/get
+  :body
+  json/parse-string
+  keys
+  (map name)
+  sort
+  (map get-imdb-index)
+  (filter identity)
+  (mapcat get-index-assigns)
+  (remove (comp zero? :event-count))
+;  first
+    )
 
-(defn expired-assn? [assn]
-  ; XXX
-  false)
+(def first-ind (first (filter identity (map get-imdb-index ind-names))))
+(def assns (get-imdb-assignments [first-ind]))
 
-(defn index-for-assn [assn]
-  "someind")
+(identity assns)
 
-(defn cust-for-assn [assn]
-  35)
+(defn get-index-assigns [index]
+  (let [now (System/currentTimeMillis)]
+    (filter #(> (:expiry %) now)
+      (for [assn (AssignmentDAO/queryByIndex (.iid index))]
+        {:cid (.cid assn)
+;        :expiry (.expireTime assn)
+         :event-count (.statsEventCount assn)}))))
 
-(defn get-cust-sets [assns]
-  (let [inds (set (map index-for-assn assns))]
-    (into {}
-      (for [ind inds]
-        [ind (->> assns
-               (filter #(= ind (index-for-assn %)))
-               (map cust-for-assn))]))))
-
-(defn get-cust-routes [assns target-count])
+(defn get-cust-sets [ind-assn-map]
+  (into {}
+    (for [[ind assns] ind-assn-map]
+      [ind (->> assns (map :cid) set)])))
 
 (defmacro if-first [[v s] iform eform]
   `(if-let [s# (seq ~s)]
@@ -40,28 +52,16 @@
        ~iform)
      ~eform))
 
-(defn bytes-for-assn [assn]
-  ; XXX
-  2344556)
-
-(defn expiry-for-assn [assn]
-  ; XXX
-  134656609)
-
-(defn merge-customers [imdb-assigns]
-  (let [cids (set (map cust-for-assn imdb-assigns))]
-    (into {}
-      (for [cid cids]
-        (let [cust-assns (filter #(= cid (cust-for-assn %)) imdb-assigns)
-              byte-count (->>
-                           cust-assns
-                           (map bytes-for-assn)
-                           (reduce +))
-              max-expire (->>
-                          cust-assns
-                          (map expiry-for-assn)
-                          (reduce max))]
-          (map-of cid byte-count max-expire))))))
+(defn merge-customers [imdb-assigns cust-retentions]
+  (for [[cid retention] cust-retentions]
+    (let [cust-assns (filter #(= cid (:cid %)) imdb-assigns)]
+      {:cid         cid
+       :event-count (->>
+                      cust-assns
+                      (map :event-count)
+                      (reduce +))
+       :retention   retention
+       })))
 
 (defn take-n-bytes [custs byte-limit]
   (loop [rem-custs custs
@@ -78,7 +78,7 @@
       [taken-custs bytes-taken rem-custs])))
 
 (defn make-partitions [custs target-count]
-  (loop [rem-custs custs
+  (loop [rem-custs (sort-by :max-expire custs)
          partitions-left target-count
          partitions-created []
          bytes-remaining (->> custs

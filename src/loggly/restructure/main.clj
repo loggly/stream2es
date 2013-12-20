@@ -125,6 +125,8 @@
                        :source-count source-count
                        :target-count target-count}))))
 
+(def visitor-holder (atom nil))
+
 (defn main
   "takes a parsed map of args as supplied by tools.cli"
   [{:keys [source-index-names target-count source-host
@@ -160,6 +162,7 @@
                                 :visit-event visit-event
                                 :continue? (fn [] @continue-flag)
                                 :finish done-reporter}))]
+    (reset! visitor-holder visitor)
     (create-target-indexes
       source-index-names
       target-index-names
