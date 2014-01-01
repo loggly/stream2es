@@ -61,12 +61,9 @@
 
 (defn make-callback [opts handler]
   (fn []
-    (doall
-     (map handler
-          (concat
-           (map make-doc
-                (es/scan (:source opts)
+    (doseq [doc (es/scan (:source opts)
                          (:query opts)
                          (:scroll-time opts)
-                         (:scroll-size opts)))
-           [:eof])))))
+                         (:scroll-size opts))]
+      (handler (make-doc doc)))
+    (handler :eof)))
